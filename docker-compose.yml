@@ -95,6 +95,9 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.nginx_poker.rule=Host(`${NGINX_DOMAIN}`) && (PathPrefix(`/storage`) || PathPrefix(`/static`))"
+      - "traefik.http.routers.telegram_bot_poker.entrypoints=websecure"
+      - "traefik.http.routers.telegram_bot_poker.tls=true"
+      - "traefik.http.routers.telegram_bot_poker.tls.certresolver=myresolver"
       - "traefik.http.services.nginx_poker.loadbalancer.server.port=${NGINX_PORT}"
       - "traefik.http.routers.nginx_poker.priority=150"
     depends_on:
