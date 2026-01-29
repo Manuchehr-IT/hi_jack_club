@@ -107,7 +107,7 @@ services:
       dockerfile: Dockerfile
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.telegram_bot_poker.rule=Host(`${TELEGRAM_BOT_DOMAIN}`)"
+      - "traefik.http.routers.telegram_bot_poker.rule=Host(`${TELEGRAM_BOT_DOMAIN}`) && Path(`/webhook`)"
       - "traefik.http.routers.telegram_bot_poker.entrypoints=websecure"
       - "traefik.http.routers.telegram_bot_poker.tls=true"
       - "traefik.http.routers.telegram_bot_poker.tls.certresolver=myresolver"
