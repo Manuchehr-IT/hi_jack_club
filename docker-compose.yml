@@ -93,7 +93,7 @@ services:
       - ./backend/staticfiles:/staticfiles:ro
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.nginx_poker.rule=(PathPrefix(`/storage`) || PathPrefix(`/static`))"
+      - "traefik.http.routers.nginx_poker.rule=Host(`${NGINX_DOMAIN}`) && (PathPrefix(`/storage`) || PathPrefix(`/static`))"
       - "traefik.http.services.nginx_poker.loadbalancer.server.port=${NGINX_PORT}"
     depends_on:
       - backend
