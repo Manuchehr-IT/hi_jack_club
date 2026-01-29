@@ -7,6 +7,10 @@ COPY package.json package-lock.json ./
 RUN npm install
 
 COPY . .
+
+# Копируем env файл
+COPY .env.production .env
+
 RUN npm run build
 
 # Stage 2: serve build

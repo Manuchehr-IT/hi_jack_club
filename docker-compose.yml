@@ -35,6 +35,7 @@ services:
       context: celery_app
       dockerfile: Dockerfile
     environment:
+      ENVIRONMENT: ${ENVIRONMENT}
       CELERY_BROKER_URL: ${CELERY_BROKER_URL}
     depends_on:
       postgres:

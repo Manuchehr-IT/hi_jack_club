@@ -8,4 +8,7 @@ RUN npm install
 
 COPY . .
 
+# Копируем env файл
+COPY .env.development .env
+
 CMD ["npm", "run", "dev"]
