@@ -1,0 +1,138 @@
+/* Базовые стили для таблицы турниров */
+#changelist .results {
+    overflow-x: auto !important;
+    width: 100% !important;
+}
+
+#changelist table {
+    min-width: 800px !important;
+    width: 100% !important;
+}
+
+/* Стили для статусов */
+.status-badge-wrapper {
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    white-space: nowrap !important;
+    min-width: 120px !important;
+}
+
+.status-emoji {
+    font-size: 14px !important;
+}
+
+.status-text {
+    color: white !important;
+    padding: 4px 8px !important;
+    border-radius: 12px !important;
+    font-size: 11px !important;
+    font-weight: 500 !important;
+    white-space: nowrap !important;
+    display: inline-block !important;
+    min-width: 80px !important;
+    text-align: center !important;
+}
+
+/* Стили для кнопок действий */
+.tournament-action-btn {
+    background: #dc3545 !important;
+    color: white !important;
+    padding: 6px 12px !important;
+    text-decoration: none !important;
+    border-radius: 4px !important;
+    font-size: 12px !important;
+    border: none !important;
+    cursor: pointer !important;
+    display: inline-block !important;
+    text-align: center !important;
+    white-space: nowrap !important;
+    min-width: 120px !important;
+    transition: background-color 0.2s !important;
+}
+
+.tournament-action-btn:hover {
+    background: #c82333 !important;
+    color: white !important;
+}
+
+.tournament-finished-badge {
+    color: #6c757d !important;
+    font-size: 12px !important;
+    white-space: nowrap !important;
+    display: inline-block !important;
+    min-width: 120px !important;
+    text-align: center !important;
+    padding: 6px 12px !important;
+}
+
+/* Гарантируем, что ячейки не переносятся */
+#changelist table tbody td {
+    white-space: nowrap !important;
+}
+
+/* Улучшаем отображение заголовков */
+#changelist table thead th {
+    white-space: nowrap !important;
+    position: relative !important;
+}
+
+/* Адаптация для очень узких экранов */
+@media (max-width: 1024px) {
+    .status-text {
+        font-size: 10px !important;
+        padding: 3px 6px !important;
+        min-width: 70px !important;
+    }
+    
+    .tournament-action-btn,
+    .tournament-finished-badge {
+        font-size: 11px !important;
+        padding: 5px 10px !important;
+        min-width: 110px !important;
+    }
+}
+
+/* Дополнительная компактизация для мобильных */
+@media (max-width: 768px) {
+    .status-badge-wrapper {
+        min-width: 100px !important;
+        gap: 4px !important;
+    }
+    
+    .status-text {
+        min-width: 60px !important;
+        font-size: 9px !important;
+        padding: 2px 5px !important;
+    }
+    
+    .tournament-action-btn,
+    .tournament-finished-badge {
+        min-width: 90px !important;
+        font-size: 10px !important;
+        padding: 4px 8px !important;
+    }
+    
+    #changelist table {
+        min-width: 700px !important;
+    }
+}
+
+/* Гарантируем, что горизонтальная прокрутка всегда доступна */
+#changelist .results::-webkit-scrollbar {
+    height: 8px;
+}
+
+#changelist .results::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+#changelist .results::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+}
+
+#changelist .results::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}

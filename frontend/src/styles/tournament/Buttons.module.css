@@ -1,0 +1,44 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 40px;
+  position: relative;
+  overflow: hidden;
+}
+
+.button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed !important;
+}
+
+.button.participation {
+  cursor: pointer;
+  border: 1px solid #004E49;
+  background: #E5E4E2;
+  height: 60px;
+}
+
+.button.info {
+  border: 1.5px solid #24262A;
+  background: #000706;
+  height: 50px;
+}
+
+.button.participation .text {
+  font-weight: bold;
+  font-size: 18px;
+  text-transform: uppercase;
+  color: #0B0704;
+}
+
+.button.info .text {
+  font-size: 16px;
+}

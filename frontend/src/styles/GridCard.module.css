@@ -1,0 +1,28 @@
+.gridCard {
+  flex: 1;
+  border: 1.5px solid #24262A;
+  border-radius: 30px;
+  padding: 16px;
+  height: 105px;
+  cursor: pointer;
+  position: relative;
+  min-width: 0;
+}
+
+/*.gridCard:hover {
+  background: #4b5563;
+  transform: translateY(-2px);
+}*/
+
+.cardContent {
+  display: flex;
+  align-items: flex-start;
+  height: 100%;
+}
+
+.title {
+  font-family: "Days One", sans-serif;
+  font-size: 24px;
+  text-transform: uppercase;
+  line-height: 120%;
+}

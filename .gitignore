@@ -1,0 +1,25 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+
+# Environment
+.env
+.env.*
+
+# Docker
+*.pid
+
+*.log
+
+# Sublime
+*.sublime-project
+
+# Other
+.venv/
+
+logs/
+storage/
+staticfiles/
+node_modules/

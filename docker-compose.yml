@@ -1,0 +1,160 @@
+services:
+  postgres:
+    image: postgres:16.2
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DATABASE_USER}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+      POSTGRES_DB: ${DATABASE_NAME}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USER} -d ${DATABASE_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network 
+
+  redis:
+    image: redis:alpine
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+
+  celery:
+    restart: unless-stopped
+    build:
+      context: celery_app
+      dockerfile: Dockerfile
+    environment:
+      CELERY_BROKER_URL: ${CELERY_BROKER_URL}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - app-network
+
+  backend:
+    restart: unless-stopped
+    build:
+      context: backend
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+      - backend/.env.${ENVIRONMENT}
+    environment:
+      APP_DOMAIN: ${BACKEND_DOMAIN}
+      APP_HOST: ${BACKEND_HOST}
+      APP_PORT: ${BACKEND_PORT}
+    #   - PYTHONPATH=/app:/shared:/celery_app
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.backend_poker.rule=Host(`${BACKEND_DOMAIN}`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.backend_poker.entrypoints=websecure"
+      - "traefik.http.routers.backend_poker.tls=true"
+      - "traefik.http.routers.backend_poker.tls.certresolver=myresolver"
+      - "traefik.http.services.backend_poker.loadbalancer.server.port=${BACKEND_PORT}"
+    # healthcheck:
+    #   test: ["CMD", "curl", "-f", "http://backend:${DJANGO_PORT}/health/"]
+    #   interval: 15s
+    #   timeout: 15s
+    #   retries: 3
+    #   start_period: 30s
+    volumes:
+      # - ./backend:/app
+      - ./backend/logs:/app/logs
+      - ./backend/storage:/app/storage
+      - ./backend/staticfiles:/app/staticfiles:rw
+      - ./celery_app:/app/celery_app:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - app-network
+
+  nginx:
+    image: nginx:alpine
+    restart: unless-stopped
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./backend/storage:/storage:ro
+      - ./backend/staticfiles:/staticfiles:ro
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.nginx_poker.rule=PathPrefix(`/storage`)"
+      - "traefik.http.services.nginx_poker.loadbalancer.server.port=${NGINX_PORT}"
+    depends_on:
+      - backend
+    networks:
+      - app-network
+
+  telegram_bot:
+    restart: unless-stopped
+    build:
+      context: telegram_bot
+      dockerfile: Dockerfile
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.telegram_bot_poker.rule=Host(`${TELEGRAM_BOT_DOMAIN}`)"
+      - "traefik.http.routers.telegram_bot_poker.entrypoints=websecure"
+      - "traefik.http.routers.telegram_bot_poker.tls=true"
+      - "traefik.http.routers.telegram_bot_poker.tls.certresolver=myresolver"
+      - "traefik.http.services.telegram_bot_poker.loadbalancer.server.port=${TELEGRAM_BOT_PORT}"
+    env_file:
+      - .env
+      - telegram_bot/.env.${ENVIRONMENT}
+    environment:
+      APP_DOMAIN: ${TELEGRAM_BOT_DOMAIN}
+      APP_HOST: ${TELEGRAM_BOT_HOST}
+      APP_PORT: ${TELEGRAM_BOT_PORT}
+    volumes:
+      - ./telegram_bot/logs:/app/logs
+      - ./celery_app:/app/celery_app:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - app-network
+
+  frontend:
+    restart: unless-stopped
+    build:
+      context: frontend
+      dockerfile: Dockerfile.${ENVIRONMENT}
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend_poker.rule=Host(`${FRONTEND_DOMAIN}`)"
+      - "traefik.http.routers.frontend_poker.entrypoints=websecure"
+      - "traefik.http.routers.frontend_poker.tls=true"
+      - "traefik.http.routers.frontend_poker.tls.certresolver=myresolver"
+      - "traefik.http.services.frontend_poker.loadbalancer.server.port=${FRONTEND_PORT}"
+    env_file:
+      - frontend/.env.${ENVIRONMENT}
+    environment:
+      APP_DOMAIN: ${FRONTEND_DOMAIN}
+      APP_HOST: ${FRONTEND_HOST}
+      APP_PORT: ${FRONTEND_PORT}
+    networks:
+      - app-network
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  app-network:
+    driver: bridge

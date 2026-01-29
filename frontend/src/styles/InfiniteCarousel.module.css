@@ -1,0 +1,20 @@
+/* components/InfiniteCarousel.module.css */
+.swiper {
+  width: 100%;
+/*  padding-left: 10%;
+  padding-right: 10%;*/
+  user-select: none;
+}
+
+.slide {
+  position: relative;
+  border-radius: 25px;
+  overflow: hidden;
+}
+
+.carousel {
+  width: 100%;
+  height: 190px;
+  object-fit: cover;
+  display: block;
+}

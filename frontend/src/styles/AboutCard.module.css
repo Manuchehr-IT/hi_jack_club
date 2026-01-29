@@ -1,0 +1,54 @@
+.aboutCard {
+  /*flex: 1;*/
+  border: 6px solid #022927;
+  border-radius: 30px;
+  padding: 16px;
+  height: 128px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.cardContent {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  height: 100%;
+  position: relative;
+  z-index: 1;
+}
+
+.textContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  justify-content: space-between;
+}
+
+.title {
+  font-family: "Days One", sans-serif;
+  font-size: 24px;
+  line-height: 120%;
+  text-transform: uppercase;
+  /*margin: 0;*/
+}
+
+.chipImage {
+  position: absolute;
+  top: 50%;
+  right: 16px;
+  transform: translateY(-50%);
+  z-index: 0;
+}
+
+.chipImage img {
+  width: 89px;
+  height: 88px;
+  object-fit: contain;
+}
+
+.backgroundImage {
+  background-size: cover;
+  background-position: center 29%;
+}

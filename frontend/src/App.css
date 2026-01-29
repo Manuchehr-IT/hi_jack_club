@@ -1,0 +1,46 @@
+/*#root {
+  width: 100%;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  text-align: left;
+}*/
+
+html {
+  overflow: auto; /* Оставить возможность скролла */
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+html::-webkit-scrollbar {
+  display: none;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: #0B0704;
+  color: white;
+  line-height: 1.5;
+  margin: 0;
+  padding: 0;
+}
+
+.App {
+  padding: 16px 16px 80px;
+  min-height: 100vh;
+}
+
+a, button {
+  color: inherit;
+  text-decoration: none;
+}
+
+@font-face {
+    font-family: 'Days One';
+    src: url('./assets/fonts/DaysOne-Regular.woff2') format('woff2'),
+         url('./assets/fonts/DaysOne-Regular.woff') format('woff'),
+         url('./assets/fonts/DaysOne-Regular.ttf') format('truetype'); /* fallback */
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}

@@ -1,0 +1,24 @@
+import { useMe } from '@/hooks/useMe';
+import Page from '@/components/Page';
+import styles from '@/styles/Profile.module.css';
+
+const Profile = () => {
+  const { user, loading, error } = useMe();
+
+  return (
+    <Page loading={loading}>
+      <div className={styles.header}>
+        <span className={styles.nickname}>{user?.nickname || "Nickname"}</span>
+        <img src="https://app.check-checkclub.ru/images/icons/profile-info-icon.svg" />
+      </div>
+
+      <div className={styles.content}>
+        <div className={styles.infoSection}>
+          <p>Информация о профиле...</p>
+        </div>
+      </div>
+    </Page>
+  );
+};
+
+export default Profile;

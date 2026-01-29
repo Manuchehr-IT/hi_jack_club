@@ -1,0 +1,84 @@
+.tournamentCard {
+  background: #022927;
+  border: 1.5px solid #24262A;
+  border-radius: 30px;
+  padding: 16px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  min-height: 120px;
+}
+
+.cardContent {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  height: 100%;
+  position: relative;
+}
+
+.textContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  z-index: 1;
+}
+
+.title {
+  font-family: "Days One", sans-serif;
+  font-size: 24px;
+  text-transform: uppercase;
+  margin: 0 0 16px 0;
+}
+
+.info {
+  display: flex;
+  gap: 8px;
+  margin-top: auto;
+}
+
+.badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #72FFF833;
+  border-radius: 40px;
+  padding: 8px 16px;
+  /*height: 31px;*/
+}
+
+.badgeText {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.icon {
+  width: 24px;
+  height: 24px;
+}
+
+.cardImage {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  transform: translateY(-50%);
+  z-index: 0;
+}
+
+.cardImage img {
+  height: 200px;
+  object-fit: contain;
+}
+
+.ellipse {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.heel {
+  position: relative;
+  object-fit: contain;
+}

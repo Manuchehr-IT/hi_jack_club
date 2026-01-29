@@ -1,0 +1,38 @@
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #374151;
+}
+
+.title {
+  font-size: 24px;
+  font-weight: bold;
+  margin: 0;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.question {
+  font-size: 20px;
+  margin: 0 0 8px 0;
+}
+
+.answer {
+  white-space: pre-line;
+  font-size: 12px;
+  margin: 0;
+}
+
+.number {
+  display: inline-block;
+  min-width: 1em;
+  /*color: #0070f3;*/
+  font-weight: bold;
+}

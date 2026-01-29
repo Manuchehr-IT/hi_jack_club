@@ -1,0 +1,108 @@
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #374151;
+}
+
+.title {
+  font-size: 24px;
+  font-weight: bold;
+  margin: 0;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Стили для рейтинга */
+.ratingItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: #1f2937;
+  border-radius: 12px;
+  border: 1px solid #374151;
+}
+
+.position {
+  font-size: 18px;
+  font-weight: bold;
+  color: #60a5fa;
+  min-width: 40px;
+}
+
+.playerInfo {
+  flex: 1;
+}
+
+.name {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.points {
+  font-size: 14px;
+  color: #9ca3af;
+}
+
+/* Стили для информации */
+.infoSection {
+  background: #1f2937;
+  border-radius: 12px;
+  padding: 16px;
+  border: 1px solid #374151;
+}
+
+.infoSection h3 {
+  margin: 0 0 12px 0;
+  color: #60a5fa;
+}
+
+.infoSection p, .infoSection li {
+  margin-bottom: 8px;
+  line-height: 1.5;
+}
+
+.infoSection ul {
+  padding-left: 20px;
+}
+
+.joinButton {
+  background: linear-gradient(135deg, #7c3aed, #2563eb);
+  color: white;
+  border: none;
+  padding: 16px;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 16px;
+}
+
+.joinButton:hover {
+  opacity: 0.9;
+}
+
+
+.badge {
+  display: flex;
+  /*align-items: center;*/
+  gap: 8px;
+  height: 24px;
+}
+
+.icon {
+  width: 16px;
+  height: 16px;
+}
+
+.badgeText {
+  font-size: 12px;
+  font-weight: 500;
+}

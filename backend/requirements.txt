@@ -1,0 +1,15 @@
+celery
+dotenv
+Django
+djangorestframework
+djangorestframework-simplejwt
+django-ckeditor-5
+django-cors-headers
+drf-spectacular
+httpx
+qrcode
+Pillow
+psycopg2-binary
+pydantic-settings
+redis
+whitenoise

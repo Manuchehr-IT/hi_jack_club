@@ -1,0 +1,24 @@
+services:
+  backend:
+    labels:
+      - "traefik.enable=false"
+    ports:
+      - "8000:${BACKEND_PORT}"
+
+  nginx:
+    labels:
+      - "traefik.enable=false"
+    ports:
+      - "8080:${NGINX_PORT}"
+
+  telegram_bot:
+    labels:
+      - "traefik.enable=false"
+    ports:
+      - "8443:${TELEGRAM_BOT_PORT}"
+
+  frontend:
+    labels:
+      - "traefik.enable=false"
+    ports:
+      - "5173:${FRONTEND_PORT}"

@@ -1,0 +1,97 @@
+/* ===== Error States ===== */
+.errorState {
+  text-align: center;
+  padding: 64px 16px;
+  background: rgba(239, 68, 68, 0.05);
+  border-radius: 16px;
+  border: 1px solid #10b981;
+}
+
+.errorTitle {
+  font-family: 'Inter', sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+  /*margin-bottom: 8px;*/
+  color: #10b981;
+}
+
+.errorText {
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  color: #9ca3af;
+  margin-bottom: 32px;
+  line-height: 1.6;
+}
+
+.errorPage {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  text-align: center;
+  background: black;
+  color: white;
+}
+
+.errorPageTitle {
+  font-family: 'Inter', sans-serif;
+  font-size: 32px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  color: #10b981;
+}
+
+.errorPageMessage {
+  font-family: 'Inter', sans-serif;
+  font-size: 16px;
+  color: #9ca3af;
+  margin-bottom: 32px;
+  max-width: 400px;
+  line-height: 1.5;
+}
+
+.errorActions {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: center;
+}
+
+.retryButton {
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 16px 32px;
+  font-family: 'Inter', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 200ms ease;
+  min-width: 200px;
+}
+
+.retryButton:hover {
+  background: #2563eb;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+}
+
+.backLink {
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  color: #3b82f6;
+  text-decoration: none;
+  transition: all 200ms ease;
+  /*padding: 8px 16px;*/
+  border-radius: 8px;
+}
+
+.backLink:hover {
+  color: #3b82f6;
+  text-decoration: underline;
+  background: rgba(59, 130, 246, 0.1);
+}
+

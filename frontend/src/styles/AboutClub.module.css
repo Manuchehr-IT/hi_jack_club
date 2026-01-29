@@ -1,0 +1,80 @@
+/* src/styles/AboutClub.module.css */
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #374151;
+}
+
+.title {
+  font-size: 24px;
+  font-weight: bold;
+  margin: 0;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.block {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.text {}
+
+.text h1
+.text h2
+.text h3
+.text h4 {
+  margin: 1.5em 0 0.5em 0;
+  font-weight: normal;
+} 
+
+.text p {
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.text h3 {
+  font-size: 20px;
+  /*margin-top: 32px;*/
+}
+
+.text p {
+  margin: 1em 0;
+  line-height: 1.6;
+}
+
+/* Для абзацев, которые идут друг за другом */
+.text p + p {
+  margin-top: 1em;
+}
+
+/* Стили для переносов строк <br> */
+.text br {
+  display: block;
+  content: "";
+  margin-top: 0.5em;
+}
+
+/* Для списков, если они будут */
+.text ul, 
+.text ol {
+  margin: 1em 0;
+  padding-left: 2em;
+}
+
+.text li {
+  margin: 0.5em 0;
+}
