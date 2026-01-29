@@ -11,7 +11,7 @@ class SocialNetworkConfig(AppConfig):
 
 		def create_default_links(sender, **kwargs):
 			try:
-				if SocialNetwork.objects.count() == 0:
+				if sender.name == self.name:
 					defaults = {
 						"map": "https://yandex.ru/maps/org/khay_dzhek_klab_/83743013847?si=hkgyga7pje6fw6n1znjpxqhjk0",
 						"ig": "https://www.instagram.com/hi_jack_club",
@@ -21,8 +21,8 @@ class SocialNetworkConfig(AppConfig):
 						"vk_broadcast_archive": "https://vk.com/hijackclub",
 					}
 					for social_type, url in defaults.items():
-						SocialNetwork.objects.create(social_type=social_type, url=url)
+						SocialNetwork.objects.get_or_create(social_type=social_type, defaults={"url": url})
 			except OperationalError:
 				pass
 
-		post_migrate.connect(create_default_links)
+		post_migrate.connect(create_default_links, sender=self)
