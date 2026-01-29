@@ -83,6 +83,7 @@ services:
         condition: service_healthy
     networks:
       - app-network
+      - web
 
   nginx:
     image: nginx:alpine
@@ -99,6 +100,7 @@ services:
       - backend
     networks:
       - app-network
+      - web
 
   telegram_bot:
     restart: unless-stopped
@@ -129,6 +131,7 @@ services:
         condition: service_healthy
     networks:
       - app-network
+      - web
 
   frontend:
     restart: unless-stopped
@@ -150,6 +153,7 @@ services:
       APP_PORT: ${FRONTEND_PORT}
     networks:
       - app-network
+      - web
 
 volumes:
   postgres_data:
@@ -158,3 +162,5 @@ volumes:
 networks:
   app-network:
     driver: bridge
+  web:
+    external: true
