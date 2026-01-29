@@ -95,9 +95,9 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.nginx_poker.rule=Host(`${NGINX_DOMAIN}`) && (PathPrefix(`/storage`) || PathPrefix(`/static`))"
-      - "traefik.http.routers.telegram_bot_poker.entrypoints=websecure"
-      - "traefik.http.routers.telegram_bot_poker.tls=true"
-      - "traefik.http.routers.telegram_bot_poker.tls.certresolver=myresolver"
+      - "traefik.http.routers.nginx_poker.entrypoints=websecure"
+      - "traefik.http.routers.nginx_poker.tls=true"
+      - "traefik.http.routers.nginx_poker.tls.certresolver=myresolver"
       - "traefik.http.services.nginx_poker.loadbalancer.server.port=${NGINX_PORT}"
       - "traefik.http.routers.nginx_poker.priority=150"
     depends_on:
@@ -153,7 +153,7 @@ services:
       - "traefik.http.routers.frontend_poker.tls=true"
       - "traefik.http.routers.frontend_poker.tls.certresolver=myresolver"
       - "traefik.http.services.frontend_poker.loadbalancer.server.port=${FRONTEND_PORT}"
-      - "traefik.http.routers.frontend.priority=1"
+      - "traefik.http.routers.frontend_poker.priority=1"
     env_file:
       - frontend/.env.${ENVIRONMENT}
     environment:
