@@ -51,7 +51,7 @@ const Footer = () => {
           onClick={() => navigate('/profile')}
         >
           <div className={`${styles.icon} ${styles.avatar}`}>
-            {user?.photo ? (
+            {user?.avatar_path ? (
               <img src={user.avatar_path} alt="Profile" />
             ) : (
               <span style={{width: '24px', height: '24px', borderRadius: '50%', background: '#f5f5f5', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px'}}>👤</span>
