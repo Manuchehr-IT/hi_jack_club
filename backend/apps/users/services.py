@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 from django.utils.crypto import get_random_string
 from typing import Tuple
 
-# from celery_app.tasks.telegram import send_message
+from celery_app.tasks.telegram import send_message
 from config.settings import TELEGRAM_BOT_TOKEN, TELEGRAM_BOT_ADMIN_IDS
 from apps.telegram.schemas import TelegramUser
 from apps.telegram.utils import save_avatar
