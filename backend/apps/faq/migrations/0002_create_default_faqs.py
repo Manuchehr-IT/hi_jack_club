@@ -35,7 +35,7 @@ def create_default_faqs(apps, schema_editor):
         {
             "question": "Что я получаю, если выигрываю турнир?",
             "answer": (
-                "Вы получаете:.\n"
+                "Вы получаете:\n"
                 "● очки рейтинга клуба\n"
                 "● игровые бонусы\n"
                 "● статус, достижения и участие в общем рейтинге\n"
@@ -89,5 +89,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(create_default_faqs)
+        migrations.RunPython(create_default_faqs, reverse_func)
     ]
