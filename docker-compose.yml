@@ -56,7 +56,6 @@ services:
       APP_DOMAIN: ${BACKEND_DOMAIN}
       APP_HOST: ${BACKEND_HOST}
       APP_PORT: ${BACKEND_PORT}
-    #   - PYTHONPATH=/app:/shared:/celery_app
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.backend_poker.rule=Host(`${BACKEND_DOMAIN}`) && PathPrefix(`/api`)"
@@ -71,7 +70,6 @@ services:
     #   retries: 3
     #   start_period: 30s
     volumes:
-      # - ./backend:/app
       - ./backend/logs:/app/logs
       - ./backend/storage:/app/storage
       - ./backend/staticfiles:/app/staticfiles:rw
@@ -164,4 +162,3 @@ networks:
     driver: bridge
   web:
     external: true
-    name: web
