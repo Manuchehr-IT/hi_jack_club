@@ -59,7 +59,7 @@ services:
       APP_PORT: ${BACKEND_PORT}
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.backend_poker.rule=Host(`${BACKEND_DOMAIN}`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.backend_poker.rule=Host(`${BACKEND_DOMAIN}`) && (PathPrefix(`/api`) || PathPrefix(`/admin`))"
       - "traefik.http.routers.backend_poker.entrypoints=websecure"
       - "traefik.http.routers.backend_poker.tls=true"
       - "traefik.http.routers.backend_poker.tls.certresolver=myresolver"
