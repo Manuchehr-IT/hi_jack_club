@@ -9,7 +9,7 @@ RUN npm install
 COPY . .
 
 # Копируем env файл
-COPY .env.staging .env
+# COPY .env.staging .env
 
 RUN npm run build
 
