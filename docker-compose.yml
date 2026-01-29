@@ -112,6 +112,9 @@ services:
       - "traefik.http.routers.telegram_bot_poker.tls=true"
       - "traefik.http.routers.telegram_bot_poker.tls.certresolver=myresolver"
       - "traefik.http.services.telegram_bot_poker.loadbalancer.server.port=${TELEGRAM_BOT_PORT}"
+
+      - "traefik.http.routers.telegram_bot.middlewares=telegram-stripprefix"
+      - "traefik.http.middlewares.telegram-stripprefix.stripprefix.prefixes=/webhook"
     env_file:
       - .env
       - telegram_bot/.env.${ENVIRONMENT}
@@ -143,6 +146,7 @@ services:
       - "traefik.http.routers.frontend_poker.tls=true"
       - "traefik.http.routers.frontend_poker.tls.certresolver=myresolver"
       - "traefik.http.services.frontend_poker.loadbalancer.server.port=${FRONTEND_PORT}"
+      - "traefik.http.routers.frontend.priority=1"
     env_file:
       - frontend/.env.${ENVIRONMENT}
     environment:

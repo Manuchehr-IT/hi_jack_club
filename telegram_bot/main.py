@@ -78,9 +78,9 @@ async def create_app() -> FastAPI:
 		finally:
 			return {"status": "ok"}
 
-	@app.get("/health")
-	async def health_check():
-		return {"message": "ok", "status": "healthy"}
+	# @app.get("/health-bot")
+	# async def health_check():
+	# 	return {"message": "ok", "status": "healthy"}
 
 	return app
 
