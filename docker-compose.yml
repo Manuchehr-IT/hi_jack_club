@@ -72,6 +72,7 @@ services:
     #   retries: 3
     #   start_period: 30s
     volumes:
+      - ./backend/apps:/app/apps
       - ./backend/logs:/app/logs
       - ./backend/storage:/app/storage
       - ./backend/staticfiles:/app/staticfiles:rw
