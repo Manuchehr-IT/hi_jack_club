@@ -64,6 +64,7 @@ services:
       - "traefik.http.routers.backend_poker.tls=true"
       - "traefik.http.routers.backend_poker.tls.certresolver=myresolver"
       - "traefik.http.services.backend_poker.loadbalancer.server.port=${BACKEND_PORT}"
+      - "traefik.http.routers.nginx_poker.priority=50"
     # healthcheck:
     #   test: ["CMD", "curl", "-f", "http://backend:${DJANGO_PORT}/health/"]
     #   interval: 15s
@@ -95,6 +96,7 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.nginx_poker.rule=Host(`${NGINX_DOMAIN}`) && (PathPrefix(`/storage`) || PathPrefix(`/static`))"
       - "traefik.http.services.nginx_poker.loadbalancer.server.port=${NGINX_PORT}"
+      - "traefik.http.routers.nginx_poker.priority=150"
     depends_on:
       - backend
     networks:
@@ -113,6 +115,7 @@ services:
       - "traefik.http.routers.telegram_bot_poker.tls=true"
       - "traefik.http.routers.telegram_bot_poker.tls.certresolver=myresolver"
       - "traefik.http.services.telegram_bot_poker.loadbalancer.server.port=${TELEGRAM_BOT_PORT}"
+      - "traefik.http.routers.nginx_poker.priority=100"
 
       - "traefik.http.routers.telegram_bot.middlewares=telegram-stripprefix"
       - "traefik.http.middlewares.telegram-stripprefix.stripprefix.prefixes=/webhook"
