@@ -174,4 +174,4 @@ networks:
   app-network:
     driver: bridge
   web:
-    external: false
+    external: ${WEB_NETWORK_EXTERNAL:-false}
