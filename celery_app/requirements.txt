@@ -1,4 +1,6 @@
 celery
+django
+django-cors-headers
 httpx
 pydantic-settings
 redis

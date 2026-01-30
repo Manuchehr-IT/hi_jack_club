@@ -34,7 +34,7 @@ STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 # SECURITY WARNING: keep the secret key used in production secret!
 # SECURITY WARNING: don't run with debug turned on in production!
 
-SECRET_KEY = os.getenv("APP_SECRET_KEY")
+SECRET_KEY = os.getenv("SECRET_KEY")
 DEBUG = os.getenv("APP_DEBUG", "False").lower() == "true"
 ALLOWED_HOSTS = env_list("APP_ALLOWED_HOSTS")
 CSRF_TRUSTED_ORIGINS = env_list("APP_CSRF_TRUSTED_ORIGINS")

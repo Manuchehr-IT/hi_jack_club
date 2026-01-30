@@ -1,4 +1,3 @@
-# celery_app/tasks/telegram/client.py
 import httpx
 import logging
 import os

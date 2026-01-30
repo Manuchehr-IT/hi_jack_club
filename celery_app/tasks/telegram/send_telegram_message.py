@@ -1,4 +1,3 @@
-# celery_app/tasks/telegram/send_telegram_message.py
 import logging
 from datetime import datetime
 from typing import List

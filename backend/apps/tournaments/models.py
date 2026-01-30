@@ -39,31 +39,31 @@ class Tournament(models.Model):
 			)
 		]
 
-	def clean(self):
-		super().clean()
+	# def clean(self):
+	# 	super().clean()
 
-		# Запрещаем создавать турниры сразу с статусом INACTIVE
-		if not self.pk and self.status == self.StatusType.INACTIVE:
-			raise ValidationError({
-				"status": "Нельзя создать турнир сразу с статусом 'Неактивный'. Турнир должен пройти через статусы 'В очереди' или 'Активный'."
-			})
+	# 	# Запрещаем создавать турниры сразу с статусом INACTIVE
+	# 	if not self.pk and self.status == self.StatusType.INACTIVE:
+	# 		raise ValidationError({
+	# 			"status": "Нельзя создать турнир сразу с статусом 'Неактивный'. Турнир должен пройти через статусы 'В очереди' или 'Активный'."
+	# 		})
 
-		# Не изменяем статус если турнир уже завершен
-		if self.status == self.StatusType.INACTIVE:
-			return
+	# 	# Не изменяем статус если турнир уже завершен
+	# 	if self.status == self.StatusType.INACTIVE:
+	# 		return
 
-		now = timezone.now()
+	# 	now = timezone.now()
 
-		if self.started_at and self.started_at <= now:
-			self.status = self.StatusType.ACTIVE
-			self.started_at = now
+	# 	if self.started_at and self.started_at <= now:
+	# 		self.status = self.StatusType.ACTIVE
+	# 		self.started_at = now
 
-		elif self.started_at and self.started_at > now:
-			self.status = self.StatusType.IN_QUEUE
+	# 	elif self.started_at and self.started_at > now:
+	# 		self.status = self.StatusType.IN_QUEUE
 
-	def save(self, *args, **kwargs):
-		self.full_clean()
-		super().save(*args, **kwargs)
+	# def save(self, *args, **kwargs):
+	# 	self.full_clean()
+	# 	super().save(*args, **kwargs)
 
 	def get_participants_count(self):
 		"""Количество зарегистрированных участников"""

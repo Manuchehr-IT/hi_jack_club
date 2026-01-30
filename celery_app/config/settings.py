@@ -3,11 +3,13 @@
 from pydantic_settings import BaseSettings
 from typing import Literal
 
-from .schemas import CelerySettings
+from .schemas import AppSettings, CelerySettings
 
 class Settings(BaseSettings):
 	environment: Literal["development", "staging", "production"]
+	secret_key: str
 
+	app: AppSettings = AppSettings()
 	celery: CelerySettings = CelerySettings()
 
 	class Config:

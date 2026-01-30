@@ -21,7 +21,8 @@ const Home = () => {
   };
 
   const handleSupportClick = () => {
-    window.open("https://t.me/async_io", "_blank");
+    Telegram.WebApp.openTelegramLink(import.meta.env.VITE_SUPPORT_URL);
+    // window.open("https://t.me/async_io", "_blank");
   };
 
   return (

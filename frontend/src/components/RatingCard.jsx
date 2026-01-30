@@ -9,7 +9,7 @@ const RatingCard = () => {
       <div className={styles.cardContent}>
         <div className={styles.textContent}>
           <h2 className={styles.title}>
-            РЕЙТИНГ<br />HI, JACK!
+            РЕЙТИНГ<br/>HI, JACK!<br/>(СКОРО)
           </h2>
           <div className={styles.badge}>
             <img src={PaperIcon} alt="PaperIcon" className={styles.icon} />
