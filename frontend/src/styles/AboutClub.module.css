@@ -31,29 +31,26 @@
   gap: 32px;
 }
 
-.text {}
+.text {
+  font-size: 12px;
+  font-weight: normal;
+}
 
 .text h1
 .text h2
 .text h3
 .text h4 {
   margin: 1.5em 0 0.5em 0;
-  font-weight: normal;
 } 
 
 .text p {
-  font-size: 12px;
-  font-weight: bold;
+  margin: 1em 0;
+  line-height: 1.6;
 }
 
 .text h3 {
   font-size: 20px;
   /*margin-top: 32px;*/
-}
-
-.text p {
-  margin: 1em 0;
-  line-height: 1.6;
 }
 
 /* Для абзацев, которые идут друг за другом */

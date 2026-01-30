@@ -14,7 +14,7 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - app-network 
+      - app-network
 
   redis:
     image: redis:alpine
@@ -161,6 +161,7 @@ services:
       APP_DOMAIN: ${FRONTEND_DOMAIN}
       APP_HOST: ${FRONTEND_HOST}
       APP_PORT: ${FRONTEND_PORT}
+      CHOKIDAR_USEPOLLING: true
     networks:
       - app-network
       - web
@@ -173,4 +174,4 @@ networks:
   app-network:
     driver: bridge
   web:
-    external: true
+    external: false

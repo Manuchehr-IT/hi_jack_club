@@ -25,6 +25,7 @@
 }
 
 .answer {
+  font-weight: normal;
   white-space: pre-line;
   font-size: 12px;
   margin: 0;

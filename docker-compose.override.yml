@@ -22,3 +22,10 @@ services:
       - "traefik.enable=false"
     ports:
       - "5173:${FRONTEND_PORT}"
+    volumes:
+      - ./frontend/src:/app/src:rw
+      - ./frontend/public:/app/public:rw
+      - ./frontend/index.html:/app/index.html:rw
+      - ./frontend/vite.config.js:/app/vite.config.js:rw
+      - ./frontend/package.json:/app/package.json:rw
+      - /app/node_modules
