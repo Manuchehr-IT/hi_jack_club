@@ -6,7 +6,7 @@ import Page from '@/components/Page';
 import styles from './QRCode.module.css';
 
 const QRCode = () => {
-  useTelegramBackButton(true);
+  useTelegramBackButton(false);
 
   const { user, loading, error } = useMe();
 
