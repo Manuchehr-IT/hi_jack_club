@@ -35,7 +35,7 @@ export function useTelegramAuth() {
 
     const tg = window.Telegram.WebApp;
     tg.ready();
-    // tg.expand();
+    tg.expand();
 
     if (tg.initData) {
       setInitData(tg.initData);
