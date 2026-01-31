@@ -1,10 +1,14 @@
 from django.conf import settings
+from django.db import models
 from django.db import transaction
 from django.utils import timezone
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import viewsets, permissions
 from rest_framework.decorators import action
+from rest_framework.mixins import ListModelMixin, RetrieveModelMixin
 from rest_framework.response import Response
+
+from celery_app.tasks import tournament
 
 from ..models import Tournament, TournamentRegistration
 from .serializers import TournamentSerializer, TournamentRegistrationSerializer
@@ -13,22 +17,80 @@ class InternalApiPermission(permissions.BasePermission):
 	"""Проверка секретного ключа для внутренних API"""
 
 	def has_permission(self, request, view):
-		if request.method == 'OPTIONS':
+		if request.method == "OPTIONS":
 			return True
 
-		secret_key = request.headers.get('X-Internal-Api-Key')
+		secret_key = request.headers.get("X-Internal-Api-Key")
 		if not secret_key:
 			return False
 		return secret_key == settings.SECRET_KEY
 
 @extend_schema(tags=["Tournaments"])
-class TournamentViewSet(viewsets.ModelViewSet):
+class TournamentViewSet(RetrieveModelMixin, viewsets.GenericViewSet):
 	serializer_class = TournamentSerializer
 	permission_classes = [permissions.AllowAny]
-	# permission_classes = [permissions.IsAuthenticated]
+	queryset = Tournament.objects.all()
 
 	def get_queryset(self):
-		return Tournament.objects.all()
+		queryset = super().get_queryset()
+		limit = self.request.query_params.get("limit")
+		if limit and limit.isdigit():
+			queryset = queryset[:int(limit)]
+		return queryset
+
+	@extend_schema(
+		summary="Получить турниры по статусу",
+		parameters=[
+			OpenApiParameter(
+				name="status",
+				description="Статус турнира. По умолчанию все статусы.",
+				required=False, # Необязательно
+				type=str,
+				enum=Tournament.StatusType.values
+			)
+		],
+		responses={200: TournamentSerializer(many=True)}
+	)
+	@action(detail=False, methods=["get"])
+	def tournaments(self, request):
+		status_param = request.query_params.get("status")
+		queryset = self.get_queryset()
+
+		if status_param:
+			queryset = queryset.filter(status=status_param)
+
+		queryset = queryset.order_by("started_at")
+
+		serializer = self.get_serializer(queryset, many=True)
+		return Response(serializer.data, status=200)
+
+	@extend_schema(
+		summary="Получить ближайший турнир",
+		responses={200: TournamentSerializer()}
+	)
+	@action(detail=False, methods=["get"], url_path="nearest")
+	def nearest(self, request):
+		now = timezone.now()
+
+		tournament = (
+			self.get_queryset()
+			.filter(status=Tournament.StatusType.IN_QUEUE)
+			.order_by(
+				models.Case(
+					models.When(started_at__gte=now, then=0),
+					default=1,
+					output_field=models.IntegerField(),
+				),
+				"started_at",
+			)
+			.first()
+		)
+
+		if not tournament:
+			return Response(None, status=404)
+
+		serializer = self.get_serializer(tournament)
+		return Response(serializer.data, status=200)
 
 	@extend_schema(
 		summary="Получить участников турнира",
