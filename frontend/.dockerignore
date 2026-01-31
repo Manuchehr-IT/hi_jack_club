@@ -21,6 +21,7 @@ coverage.xml
 .pytest_cache
 .hypothesis
 .venv/
+node_modules/
 logs/
 storage/
 staticfiles/
