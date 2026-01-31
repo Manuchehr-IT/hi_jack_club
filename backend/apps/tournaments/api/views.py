@@ -51,7 +51,7 @@ class TournamentViewSet(RetrieveModelMixin, viewsets.GenericViewSet):
 		],
 		responses={200: TournamentSerializer(many=True)}
 	)
-	@action(detail=False, methods=["get"])
+	@action(detail=False, methods=["get"], url_path="list")
 	def tournaments(self, request):
 		status_param = request.query_params.get("status")
 		queryset = self.get_queryset()

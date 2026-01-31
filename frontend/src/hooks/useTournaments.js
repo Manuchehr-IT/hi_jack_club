@@ -9,7 +9,8 @@ export const useTournaments = () => {
   useEffect(() => {
     const fetchTournaments = async () => {
       try {
-        const response = await api.get(`/tournaments/`);
+        const params = { status: "ACTIVE" };
+        const response = await api.get(`/tournaments/list/`, { params });
         const tournamentsData = response.data || [];
         setTournaments(Array.isArray(tournamentsData) ? tournamentsData : []);
       } catch (err) {

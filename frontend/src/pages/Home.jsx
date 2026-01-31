@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTournamentNearest } from '@/hooks/tournaments/useTournamentNearest';
 import Page from '@/components/Page';
 import RatingCard from '@/components/RatingCard';
 import TournamentCard from '@/components/TournamentCard';
@@ -9,33 +10,29 @@ import SocialNetworkCard from '@/components/SocialNetworkCard';
 import styles from '@/styles/Home.module.css';
 
 const Home = () => {
+  const { tournament, isLoading, error } = useTournamentNearest();
   const navigate = useNavigate();
-  // const loading = true;
-
-  // Данные турнира
-  const upcomingTournament = {
-    id: 5,
-    title: 'HI, LADIES!',
-    started_at: '2025-12-24T23:05:16.148338+03:00',
-    image: '/images/chips/isometric/cards.png'
-  };
 
   const handleSupportClick = () => {
     Telegram.WebApp.openTelegramLink(import.meta.env.VITE_SUPPORT_URL);
-    // window.open("https://t.me/async_io", "_blank");
   };
 
+  const tournamentNearestCard = tournament ? (
+    <div className={styles.section}>
+      <h2 className={styles.title}>Ближайший турнир</h2>
+      <div key={tournament.id} onClick={() => navigate(`/tournament/${tournament.id}`)}>
+        <TournamentCard tournament={tournament} />
+      </div>
+    </div>
+  ) : null;
+
+
   return (
-    <Page>
+    <Page loading={isLoading}>
       <div className={styles.content}>
 
         {/* Ближайший турнир */}
-        <div className={styles.section}>
-          <h2 className={styles.title}>Ближайший турнир</h2>
-          <div onClick={() => navigate(`/tournament/${upcomingTournament.id}`)}>
-            <TournamentCard tournament={upcomingTournament} />
-          </div>
-        </div>
+        {tournamentNearestCard}
 
         {/* Рейтинг - кликабельный */}
         <div className={styles.section}>
