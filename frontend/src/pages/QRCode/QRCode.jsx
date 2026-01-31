@@ -1,23 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTelegramBackButton } from '@/hooks/telegram/useTelegramBackButton'
 import { useMe } from "@/hooks/useMe";
 import Page from '@/components/Page';
 import styles from './QRCode.module.css';
 
-// const QRCode = () => {
-//   const { user, loading: userLoading, error: userError, refetch: userFetch } = useMe();
-//   const qr_code = user?.iiko_qr_code
-
-//   // Добавлю ошибку если qr_code будет null.
-
-//   return (
-//     <Page loading={userLoading}>
-//       <img src={qr_code} />
-//     </Page>
-//   );
-// };
-
 const QRCode = () => {
+  useTelegramBackButton(true);
+
   const { user, loading, error } = useMe();
 
   const qrCode = user?.iiko_qr_code;

@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTelegramBackButton } from '@/hooks/telegram/useTelegramBackButton'
 import { useSignUp } from "@/hooks/useSignUp";
 import { useMe } from "@/hooks/useMe";
 import Page from '@/components/Page';
 import styles from './SignUp.module.css';
 
 const SignUp = () => {
+  useTelegramBackButton(false);
+
   const { user, loading: userLoading, error: userError, refetch: userFetch } = useMe();
   const { loading: signUpLoading, error: signUpError, signUp } = useSignUp();
   const [countryCode, setCountryCode] = useState("+7");

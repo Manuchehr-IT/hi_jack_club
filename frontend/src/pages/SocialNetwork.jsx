@@ -1,3 +1,4 @@
+import { useTelegramBackButton } from '@/hooks/telegram/useTelegramBackButton'
 import { useSocialNetwork } from '@/hooks/useSocialNetwork';
 import Page from '@/components/Page';
 import Header from '@/components/social-network/Header';
@@ -5,6 +6,8 @@ import Buttons from '@/components/social-network/Buttons';
 import Info from '@/components/social-network/Info';
 
 const SocialNetwork = () => {
+  useTelegramBackButton(true);
+
   const { socialNetwork, loading, error } = useSocialNetwork();
 
   // TODO page

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
+import { useTelegramBackButton } from '@/hooks/telegram/useTelegramBackButton'
 import { useTournament } from '@/hooks/useTournament';
 import Page from '@/components/Page';
 import Header from '@/components/tournament/Header';
@@ -8,6 +9,8 @@ import Info from '@/components/tournament/Info';
 import styles from './Tournament.module.css';
 
 const Tournament = () => {
+  useTelegramBackButton(true);
+
   const { id } = useParams();
   const { tournament, loading, error } = useTournament(id);
 

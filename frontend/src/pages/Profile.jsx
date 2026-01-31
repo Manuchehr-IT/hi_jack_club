@@ -1,8 +1,11 @@
 import { useMe } from '@/hooks/useMe';
+import { useTelegramBackButton } from '@/hooks/telegram/useTelegramBackButton'
 import Page from '@/components/Page';
 import styles from '@/styles/Profile.module.css';
 
 const Profile = () => {
+  useTelegramBackButton(false);
+
   const { user, loading, error } = useMe();
 
   return (

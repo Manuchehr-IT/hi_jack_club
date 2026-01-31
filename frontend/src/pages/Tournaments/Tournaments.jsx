@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTelegramBackButton } from '@/hooks/telegram/useTelegramBackButton'
 import { useTournaments } from '@/hooks/useTournaments';
 import Page from '@/components/Page';
 import TournamentCard from '@/components/TournamentCard';
 import styles from './Tournaments.module.css';
 
 const Tournaments = () => {
+  useTelegramBackButton(false);
+
   const { tournaments, loading, error } = useTournaments();
   const navigate = useNavigate();
 

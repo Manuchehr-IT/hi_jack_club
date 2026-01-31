@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTelegramBackButton } from '@/hooks/telegram/useTelegramBackButton'
 import { useTournamentNearest } from '@/hooks/tournaments/useTournamentNearest';
 import Page from '@/components/Page';
 import RatingCard from '@/components/RatingCard';
@@ -10,6 +11,8 @@ import SocialNetworkCard from '@/components/SocialNetworkCard';
 import styles from '@/styles/Home.module.css';
 
 const Home = () => {
+  useTelegramBackButton(false);
+
   const { tournament, isLoading, error } = useTournamentNearest();
   const navigate = useNavigate();
 

@@ -1,3 +1,4 @@
+import { useTelegramBackButton } from '@/hooks/telegram/useTelegramBackButton'
 import { useAboutClub } from '@/hooks/useAboutClub';
 import { PageLoader } from '@/components/Loaders';
 import Page from '@/components/Page';
@@ -6,6 +7,8 @@ import styles from '@/styles/AboutClub.module.css';
 import { hasText } from '@/utils/htmlHelpers';
 
 const AboutClub = () => {
+  useTelegramBackButton(true);
+
   const { aboutClub: blocks, loading } = useAboutClub();
 
   // Добавьте проверку загрузки

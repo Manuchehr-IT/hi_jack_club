@@ -1,8 +1,11 @@
+import { useTelegramBackButton } from '@/hooks/telegram/useTelegramBackButton'
 import { useFAQ } from '@/hooks/useFAQ';
 import Page from '@/components/Page';
 import styles from '@/styles/FAQ.module.css';
 
 const FAQ = () => {
+  useTelegramBackButton(true);
+
   const { FAQ: faqItems, loading, error } = useFAQ();
 
   return (
