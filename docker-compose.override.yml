@@ -10,6 +10,7 @@ services:
       - "traefik.enable=false"
     ports:
       - "8080:${NGINX_PORT}"
+    profiles: ["stage", "prod"]
 
   telegram_bot:
     labels:

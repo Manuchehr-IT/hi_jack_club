@@ -10,7 +10,7 @@ from apps.telegram.utils import save_avatar
 User = get_user_model()
 
 class UserService:
-	def get_or_create_from_telegram(self, tg_user: TelegramUser) -> Tuple[User, bool]:
+	def get_or_create_from_telegram(self, tg_user: TelegramUser, referral_code: str | None) -> Tuple[User, bool]:
 		telegram_id = tg_user.id
 
 		try:
@@ -23,15 +23,20 @@ class UserService:
 			created = False
 
 		except User.DoesNotExist as e:
+			referrer = None
+			if referral_code:
+				referrer = User.objects.filter(referral_code=referral_code).first()
+
 			if str(telegram_id) in TELEGRAM_BOT_ADMIN_IDS:
 				password = get_random_string(12)
 
 				user = User.objects.create_superuser(
+					referrer=referrer,
 					telegram_id=telegram_id,
 					first_name=tg_user.first_name,
 					username=tg_user.username,
 					language_code=tg_user.language_code,
-					password=password
+					password=password,
 				)
 
 				send_message.delay(
@@ -41,6 +46,7 @@ class UserService:
 				)
 			else:
 				user = User.objects.create_user(
+					referrer=referrer,
 					telegram_id=telegram_id,
 					first_name=tg_user.first_name,
 					username=tg_user.username,

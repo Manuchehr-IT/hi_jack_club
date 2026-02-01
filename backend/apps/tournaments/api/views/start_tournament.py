@@ -1,0 +1,88 @@
+from django.conf import settings
+from django.db import transaction
+from django.utils import timezone
+from drf_spectacular.utils import extend_schema
+from rest_framework import permissions
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.response import Response
+
+from apps.tournaments.models import Tournament
+
+class InternalApiPermission(permissions.BasePermission):
+	"""Проверка секретного ключа для внутренних API"""
+
+	def has_permission(self, request, view):
+		if request.method == "OPTIONS":
+			return True
+
+		secret_key = request.headers.get("X-Internal-Api-Key")
+		if not secret_key:
+			return False
+		return secret_key == settings.SECRET_KEY
+
+@extend_schema(
+	tags=["Tournaments"],
+	summary="Внутренний endpoint для запуска турнира.",
+	description="Только для вызова из Celery worker с правильным X-Internal-Api-Key",
+	responses={
+		200: {
+			"type": "object",
+			"properties": {
+				"status": {"type": "string", "example": "ACTIVE"},
+				"id": {"type": "integer"},
+				"started_at": {"type": "string", "format": "date-time"}
+			}
+		},
+		400: {
+			"type": "object",
+			"properties": {
+				"error": {"type": "string"},
+				"started_at": {"type": "string", "format": "date-time"}
+			}
+		}
+	}
+)
+@api_view(["POST"])
+@permission_classes([InternalApiPermission])
+def start_internal(request, pk):
+	"""
+	POST /api/tournaments/{id}/start-internal
+	"""
+	try:
+		with transaction.atomic():
+			tournament = Tournament.objects.select_for_update().get(id=pk)
+
+			if tournament.status != Tournament.StatusType.IN_QUEUE:
+				return Response(
+					{
+						"error": "Tournament status is not IN_QUEUE",
+						"started_at": tournament.started_at.isoformat()
+					},
+					status=400
+				)
+
+			if tournament.started_at > timezone.now():
+				return Response(
+					{
+						"error": f"Tournament start time not reached yet: {tournament.started_at}",
+						"started_at": tournament.started_at.isoformat()
+					},
+					status=400
+				)
+
+			tournament.status = Tournament.StatusType.ACTIVE
+			tournament.save()
+
+			return Response(
+				{
+					"status": "ACTIVE",
+					"id": tournament.id,
+					"started_at": tournament.started_at.isoformat()
+				},
+				status=200
+			)
+
+	except Tournament.DoesNotExist:
+		return Response({"error": f"Tournament with id {pk} not found"}, status=404)
+	except Exception as e:
+		return Response({"error": str(e)}, status=500)

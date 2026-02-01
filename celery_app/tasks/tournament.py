@@ -1,28 +1,3 @@
-# # celery_app/tasks/tournament.py
-# from django.db import transaction
-# from django.utils import timezone
-
-# from backend.apps.tournaments.models import Tournament
-# from celery_app import app
-
-# @app.task(bind=True)
-# def start_tournament_task(self, tournament_id):
-# 	with transaction.atomic(): # pyright: ignore reportGeneralTypeIssues
-# 		tournament = Tournament.objects.select_for_update().get(id=tournament_id)
-
-# 		if tournament.status != Tournament.StatusType.IN_QUEUE:
-# 			return
-
-# 		if tournament.started_at > timezone.now():
-# 			self.apply_async(
-# 				args=[tournament_id],
-# 				eta=tournament.started_at
-# 			)
-# 			return
-
-# 		tournament.status = Tournament.StatusType.ACTIVE
-# 		tournament.save()
-
 import logging
 import httpx
 

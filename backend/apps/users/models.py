@@ -1,4 +1,4 @@
-from enum import unique
+import uuid
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
 
@@ -53,6 +53,10 @@ class User(AbstractBaseUser, PermissionsMixin):
 	avatar_path = models.ImageField(upload_to="avatars/", blank=True, null=True, verbose_name="Аватар")
 	nickname = models.CharField(max_length=32, unique=True, verbose_name="Никнейм")
 	phone = models.CharField(max_length=16, unique=True, blank=True, null=True, verbose_name="Телефон")
+
+	# Рефералка
+	referrer = models.ForeignKey("self", blank=True, null=True, on_delete=models.DO_NOTHING, related_name="referrals", verbose_name="Реферер")
+	referral_code = models.UUIDField(default=uuid.uuid4, unique=True, editable=False, verbose_name="Реферальный код")
 
 	# Игровая статистика
 	knockouts = models.IntegerField(default=0, verbose_name="Нокауты")

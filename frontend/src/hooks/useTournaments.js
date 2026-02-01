@@ -10,7 +10,7 @@ export const useTournaments = () => {
     const fetchTournaments = async () => {
       try {
         const params = { status: "IN_QUEUE" };
-        const response = await api.get(`/tournaments/list/`, { params });
+        const response = await api.get(`/tournaments/`, { params });
         const tournamentsData = response.data || [];
         setTournaments(Array.isArray(tournamentsData) ? tournamentsData : []);
       } catch (err) {

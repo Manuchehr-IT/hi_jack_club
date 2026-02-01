@@ -38,7 +38,7 @@ class TelegramAuthAPIView(APIView):
 
 		tg_data = serializer.validated_data["init_data"]
 
-		user, created = self.user_service.get_or_create_from_telegram(tg_data.user)
+		user, created = self.user_service.get_or_create_from_telegram(tg_data.user, tg_data.start_param)
 
 		refresh_token = RefreshToken.for_user(user)
 

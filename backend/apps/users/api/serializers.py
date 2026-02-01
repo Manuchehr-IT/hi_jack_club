@@ -6,8 +6,8 @@ from ..models import User
 class UserSerializer(serializers.ModelSerializer):
 	class Meta:
 		model = User
-		fields = ["id", "username", "avatar_path", "nickname", "phone", "knockouts", "rating", "privacy_policy_accepted", "iiko_qr_code"]
-		read_only_fields = ["knockouts", "rating", "privacy_policy_accepted", "created_at", "updated_at"]
+		fields = ["id", "username", "avatar_path", "nickname", "phone", "referral_code", "referrals", "knockouts", "rating", "privacy_policy_accepted", "iiko_qr_code"]
+		read_only_fields = ["referral_code", "referrals", "knockouts", "rating", "privacy_policy_accepted", "created_at", "updated_at"]
 
 class UserSignUpSerializer(serializers.ModelSerializer):
 	class Meta:
@@ -44,6 +44,6 @@ class TelegramAuthSerializer(serializers.Serializer):
 class AuthResponseSerializer(serializers.Serializer):
 	"""Для ДОКУМЕНТАЦИИ ответа (не для реального использования)"""
 	access = serializers.CharField()
-	# refresh = serializers.CharField()
+	refresh = serializers.CharField()
 	user = UserSerializer()
 	is_new_user = serializers.BooleanField()

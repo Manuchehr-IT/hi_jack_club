@@ -1,0 +1,326 @@
+.container {
+  /*padding: 12px;*/
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.nickname {
+  font-size: 24px;
+}
+
+/* Статистика */
+.statsGrid {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.statCard {
+  flex: 1;
+  background: #f8f9ff;
+  border-radius: 16px;
+  padding: 16px;
+  color: black;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+}
+
+.statIcon {
+  width: 40px;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.statIcon svg {
+  width: 24px;
+  height: 24px;
+  stroke: white;
+}
+
+.statInfo {
+  display: flex;
+  flex-direction: column;
+}
+
+.statNumber {
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.statLabel {
+  font-size: 12px;
+  opacity: 0.9;
+  margin-top: 4px;
+}
+
+/* Секции */
+.sectionTitle {
+  font-size: 18px;
+  color: black;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sectionDescription {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 16px;
+  line-height: 1.4;
+}
+
+/* Реферальная ссылка */
+.referralSection {
+  background: #f8f9ff;
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 24px;
+  border: 1px solid #eef1ff;
+}
+
+.referralLinkContainer {
+  margin: 16px 0;
+}
+
+.referralLink {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+  overflow: hidden;
+}
+
+.linkText {
+  font-family: 'Monaco', 'Menlo', monospace;
+  font-size: 14px;
+  color: #333;
+  word-break: break-all;
+  line-height: 1.4;
+}
+
+.linkActions {
+  display: flex;
+  gap: 8px;
+}
+
+.actionButton {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid #667eea;
+  background: white;
+  color: #667eea;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.actionButton:hover {
+  background: #f0f2ff;
+}
+
+.actionButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.actionButton.copied {
+  background: #48bb78;
+  border-color: #48bb78;
+  color: white;
+}
+
+.actionText {
+  font-size: 14px;
+}
+
+/* Статистика ссылки */
+.linkStats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #eef1ff;
+}
+
+.linkStat {
+  text-align: center;
+}
+
+.linkStatNumber {
+  display: block;
+  font-size: 20px;
+  font-weight: 700;
+  color: #667eea;
+  margin-bottom: 4px;
+}
+
+.linkStatLabel {
+  font-size: 12px;
+  color: #666;
+}
+
+/* Бонусы */
+.bonusesSection {
+  margin-bottom: 24px;
+}
+
+.bonusesList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.bonusItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: white;
+  border-radius: 16px;
+  border: 1px solid #eef1ff;
+  transition: transform 0.2s;
+}
+
+.bonusItem:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.bonusIcon {
+  font-size: 24px;
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+.bonusContent {
+  flex: 1;
+}
+
+.bonusContent h4 {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 4px;
+  color: #333;
+}
+
+.bonusContent p {
+  font-size: 14px;
+  color: #666;
+}
+
+.bonusAmount {
+  font-size: 18px;
+  font-weight: 700;
+  color: #48bb78;
+}
+
+/* Рефералы */
+.referralsSection {
+  margin-bottom: 24px;
+}
+
+.referralsList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.referralItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: white;
+  border-radius: 16px;
+  border: 1px solid #eef1ff;
+}
+
+.referralAvatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.referralAvatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatarPlaceholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 600;
+  font-size: 18px;
+}
+
+.referralInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.referralName {
+  font-weight: 500;
+  color: #333;
+}
+
+.referralDate {
+  font-size: 12px;
+  color: #999;
+  margin-top: 2px;
+}
+
+.referralBonus {
+  color: #48bb78;
+  font-weight: 600;
+  font-size: 16px;
+}
+
+/* Адаптивность */
+@media (max-width: 360px) {
+  .statsGrid {
+    grid-template-columns: 1fr;
+  }
+  
+  .linkActions {
+    flex-direction: column;
+  }
+  
+  .linkStats {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}

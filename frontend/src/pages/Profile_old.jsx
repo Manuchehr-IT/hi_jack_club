@@ -16,9 +16,7 @@ const Profile = () => {
       </div>
 
       <div className={styles.content}>
-        <div className={styles.infoSection}>
-          <p>Информация о профиле...</p>
-        </div>
+        <p>Информация о профиле...</p>
       </div>
     </Page>
   );
