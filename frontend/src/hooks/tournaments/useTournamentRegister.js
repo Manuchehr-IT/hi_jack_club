@@ -2,11 +2,28 @@ import { useState, useEffect, useCallback } from 'react';
 import api from '@/api/api';
 
 export const useTournamentRegister = (tournamentId) => {
-  const [isRegistered, setIsRegistered] = useState(null);
+  const [registrationStatus, setRegistrationStatus] = useState(null);
+  const [availability, setAvailability] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const checkRegistration = useCallback(async () => {
+  const checkAvailability = useCallback(async () => {
+    if (!tournamentId) return;
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await api.get(`/tournaments/${tournamentId}/availability/`);
+      setAvailability(response.data);
+    } catch (err) {
+      setError(err.message || "Не удалось получить данные о доступности турнира");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [tournamentId]);
+
+  const checkRegistrationStatus = useCallback(async () => {
     if (!tournamentId) return;
 
     setIsLoading(true);
@@ -14,8 +31,7 @@ export const useTournamentRegister = (tournamentId) => {
 
     try {
       const response = await api.get(`/tournaments/${tournamentId}/registration-status/`);
-      setIsRegistered(response.data.is_registered);
-      return response.data.is_registered;
+      setRegistrationStatus(response.data.status);
     } catch (err) {
       setError(err.message || "Не удалось проверить участие в турнире");
     } finally {
@@ -31,10 +47,14 @@ export const useTournamentRegister = (tournamentId) => {
 
     try {
       const response = await api.post(`/tournaments/${tournamentId}/register/`);
-      setIsRegistered(true);
-      return true;
+      setRegistrationStatus(response.data.status);
+      checkAvailability();
     } catch (err) {
-      setError(err.message || "Не удалось принять участие в турнире");
+      if (err.response?.status === 400) {
+        setError(err.response.data.detail);
+      } else {
+        setError(err.message || "Не удалось принять участие в турнире");
+      };
     } finally {
       setIsLoading(false);
     }
@@ -48,10 +68,14 @@ export const useTournamentRegister = (tournamentId) => {
 
     try {
       const response = await api.delete(`/tournaments/${tournamentId}/unregister/`);
-      setIsRegistered(false);
-      return false;
+      setRegistrationStatus(null);
+      checkAvailability();
     } catch (err) {
-      setError(err.message || "Не удалось отменить участие в турнире");
+      if (err.response?.status === 400) {
+        setError(err.response.data.detail);
+      } else {
+        setError(err.message || "Не удалось отменить участие в турнире");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -59,9 +83,10 @@ export const useTournamentRegister = (tournamentId) => {
 
   useEffect(() => {
     if (tournamentId) {
-      checkRegistration(tournamentId);
+      checkAvailability(tournamentId);
+      checkRegistrationStatus(tournamentId);
     }
-  }, [tournamentId, checkRegistration]);
+  }, [tournamentId, checkAvailability, checkRegistrationStatus]);
 
-  return { isRegistered, isLoading, error, checkRegistration, register, unregister };
+  return { availability, registrationStatus, isLoading, error, checkRegistrationStatus, register, unregister };
 };

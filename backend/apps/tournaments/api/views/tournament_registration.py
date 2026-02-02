@@ -9,20 +9,46 @@ from apps.tournaments.api.serializers import TournamentRegistrationSerializer
 
 @extend_schema(
 	tags=["Tournaments"],
+	summary="Получить данные о доступных местах",
+	responses={
+		200: {
+			"type": "object",
+			"properties": {
+				"available_registrations": {"type": "integer"},
+				"available_waitlists": {"type": "integer"}
+			}
+		}
+	}
+)
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def availability(request, pk):
+	"""
+	GET /api/tournaments/{id}/availability/
+	"""
+	tournament = Tournament.objects.filter(pk=pk).first()
+	if not tournament:
+		return Response({"detail": "Турнир не найден"}, status=404)
+
+	available_registrations = max(tournament.max_participants - tournament.get_participants_count(), 0)
+	available_waitlists = max(tournament.max_waitlist - tournament.get_waitlist_count(), 0)
+
+	return Response({"registrations": available_registrations, "waitlists": available_waitlists})
+
+@extend_schema(
+	tags=["Tournaments"],
 	summary="Проверить регистрацию в турнире",
 	responses={
 		200: {
 			"type": "object",
 			"properties": {
-				"is_registered": {"type": "boolean"},
+				"status": {
+					"type": "string",
+					"enum": TournamentRegistration.StatusType.values,
+					"nullable": True
+				},
 			}
 		},
-		404: {
-			"type": "object",
-			"properties": {
-				"detail": {"type": "string"}
-			}
-		}
 	}
 )
 @api_view(["GET"])
@@ -36,9 +62,9 @@ def registration_status(request, pk):
 	if not tournament:
 		return Response({"detail": "Турнир не найден"}, status=404)
 
-	is_registered = TournamentRegistration.objects.filter(tournament=tournament, user=user).exists()
+	registration = TournamentRegistration.objects.filter(tournament=tournament, user=user).first()
 
-	return Response({"is_registered": is_registered})
+	return Response({"status": registration.status if registration else None})
 
 @extend_schema(
 	tags=["Tournaments"],
@@ -66,17 +92,19 @@ def register(request, pk):
 		if not tournament:
 			return Response({"detail": "Турнир не найден"}, status=404)
 
-		if tournament.get_participants_count() >= tournament.max_participants:
-			# TODO: Сделать запрос в waitlist если есть места.
+		can, error = tournament.can_register(user)
+		if not can:
+			return Response({"detail": error}, status=400)
+
+		status_type = tournament.compute_registration_status()
+		if not status_type:
 			return Response({"detail": "Достигнут лимит участников"}, status=400)
 
-		if tournament.status != Tournament.StatusType.IN_QUEUE:
-			return Response({"detail": "Регистрация на этот турнир закрыта"}, status=400)
-
-		registration, created = TournamentRegistration.objects.get_or_create(tournament=tournament, user=user)
-
-		if not created:
-			return Response({"detail": "Вы уже зарегистрированы на этот турнир"}, status=400)
+		registration = TournamentRegistration.objects.create(
+			tournament=tournament,
+			user=user,
+			status=status_type
+		)
 
 	serializer = TournamentRegistrationSerializer(registration, context={"request": request})
 	return Response(serializer.data, status=201)
@@ -84,7 +112,15 @@ def register(request, pk):
 @extend_schema(
 	tags=["Tournaments"],
 	summary="Отменить регистрацию в турнире",
-	responses={204: None}
+	responses={
+		204: None,
+		400: {
+			"type": "object",
+			"properties": {
+				"detail": {"type": "string"}
+			}
+		}
+	}
 )
 @api_view(["DELETE", "POST"])
 @permission_classes([IsAuthenticated])
@@ -93,10 +129,25 @@ def unregister(request, pk):
 	DELETE /api/tournaments/{id}/unregister/
 	"""
 	user = request.user
-	tournament = Tournament.objects.filter(pk=pk).first()
-	if not tournament:
-		return Response({"detail": "Турнир не найден"}, status=404)
 
-	deleted_count, _ = TournamentRegistration.objects.filter(tournament=tournament, user=user).delete()
+	with transaction.atomic():
+		tournament = Tournament.objects.select_for_update().filter(pk=pk).first()
+		if not tournament:
+			return Response({"detail": "Турнир не найден"}, status=404)
+
+		if tournament.status != Tournament.StatusType.IN_QUEUE:
+			return Response({"detail": "Регистрация закрыта"}, status=400)
+
+		deleted_count, _ = TournamentRegistration.objects.filter(tournament=tournament, user=user).delete()
+
+		if tournament.get_participants_count() < tournament.max_participants:
+			waitlist_registration = TournamentRegistration.objects.filter(
+				tournament=tournament,
+				status=TournamentRegistration.StatusType.WAITLIST
+			).order_by("created_at").first()
+
+			if waitlist_registration:
+				waitlist_registration.status = TournamentRegistration.StatusType.REGISTERED
+				waitlist_registration.save()
 
 	return Response(status=204)

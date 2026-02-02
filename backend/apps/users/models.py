@@ -89,4 +89,4 @@ class User(AbstractBaseUser, PermissionsMixin):
 		ordering = ["-created_at"]
 
 	def __str__(self):
-		return f"{self.first_name} (ID: {self.telegram_id})"
+		return f"{self.first_name} (ID: {self.id})"

@@ -7,12 +7,37 @@ import CardSuits from '@/assets/icons/card-suits.svg';
 import styles from './Content.module.css';
 
 const Content = ({ tournament }) => {
-  const { isRegistered, isLoading, error, checkRegistration, register, unregister } = useTournamentRegister(tournament.id);
+  const { availability, registrationStatus, isLoading, error, checkRegistrationStatus, register, unregister } = useTournamentRegister(tournament.id);
+
+  const isRegistrationAvailable = availability && (availability.registrations > 0 || availability.waitlists > 0);
+
+  const buttonText = (() => {
+    if (registrationStatus) return "Отменить запись";
+    if (!isRegistrationAvailable) return "Нет мест";
+    if (availability.registrations > 0) return "Участвовать";
+    if (availability.waitlists > 0) return "В список ожидания";
+  })();
+
+  const hintTitle = (() => {
+    if (tournament.status !== "IN_QUEUE") return null;
+    if (error) return error;
+    if (!registrationStatus) return "Запись на турниры.";
+    if (registrationStatus === "WAITLIST") return "Вы в списке ожидания.";
+    return null;
+  })();
+
+  const hintTexts = (() => {
+    if (tournament.status !== "IN_QUEUE") return null;
+    if (error) return null;
+    if (!registrationStatus) return ["По нашим правилам гости должны заблаговременно отменять регистрацию, чтобы не забирать место у желающих из очереди."];
+    if (registrationStatus === "WAITLIST") return ["Как только освободится место, мы автоматически добавим вас в основной список."];
+    return null;
+  })();
 
   const handleClick = async () => {
     if (isLoading) return;
 
-    if (isRegistered) {
+    if (registrationStatus) {
       await unregister();
     } else {
       await register();
@@ -22,17 +47,13 @@ const Content = ({ tournament }) => {
   return (
     <main className="container">
       <section className={styles.tabsSection}>
-        <button className={`${styles.button} ${styles.participation}`} onClick={handleClick} disabled={isLoading}>
+        {tournament.status === "IN_QUEUE" ? (
+        <button className={`${styles.button} ${styles.participation}`} onClick={handleClick} disabled={isLoading || !!error || (!isRegistrationAvailable && !registrationStatus)}>
           <span className={styles.text}>
-            {
-              isLoading ? (
-                <ContentLoader />
-              ) : (
-                isRegistered ? "Отменить запись" : "Участвовать"
-              )
-            }
+            {isLoading ? <ContentLoader /> : buttonText}
           </span>
         </button>
+        ): null}
 
         <button className={`${styles.button} ${styles.info}`}>
           <img src={CardSuits} alt="card-suits" className={styles.icon} />
@@ -67,19 +88,25 @@ const Content = ({ tournament }) => {
 
       </section>
 
-      <section className={styles.footerSection}>
-        <div className={styles.hintCard}>
-          <div className={styles.cardContent}>
-            <div className={styles.detailItem}>
-              <img src={InforamtionIcon} alt="InforamtionIcon" className={styles.icon}/>
-              <h4 className={styles.title}>Запись на турниры</h4>
+      {hintTitle ? (
+        <section className={styles.footerSection}>
+          <div className={styles.hintCard}>
+            <div className={styles.cardContent}>
+              <div className={styles.detailItem}>
+                <img src={InforamtionIcon} alt="InforamtionIcon" className={styles.icon}/>
+                <h4 className={styles.title}>{hintTitle}</h4>
+              </div>
+              {hintTexts ? (
+                <ul className={styles.hints}>
+                  {hintTexts.map((hintText, index) => (
+                    <li key={index} className={styles.text}>{hintText}</li>
+                  ))}
+                </ul>
+              ): null}
             </div>
-            <ul className={styles.hints}>
-              <li className={styles.text}>По нашим правилам гости должны заблаговременно отменять регистрацию, чтобы не забирать место у желающих из очереди.</li>
-            </ul>
           </div>
-        </div>
-      </section>
+        </section>
+      ) : null}
 
     </main>
   );

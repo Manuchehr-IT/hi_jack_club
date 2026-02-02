@@ -8,20 +8,20 @@ User = get_user_model()
 
 @admin.register(User)
 class UserAdmin(BaseUserAdmin):
-    list_display = ['avatar_icon', 'id', 'telegram_id', 'first_name', 'nickname', 'username', 'is_superuser', 'created_at']
+    list_display = ['avatar_icon', 'id', 'telegram_id', 'referrer', 'nickname', 'username', 'created_at']
     list_display_links = ['avatar_icon', 'id', 'telegram_id']
     list_filter = ['is_superuser', 'created_at']
-    search_fields = ['id', 'telegram_id', 'first_name', 'nickname', 'username']
+    search_fields = ['id', 'telegram_id', 'referrer', 'nickname', 'username']
     ordering = ['-created_at']
 
     fieldsets = (
         ('Идентификатор', {'fields': ('id', 'telegram_id')}),
-        ('Персональная информация', {'fields': ('first_name', 'username', 'nickname', 'phone', 'avatar_preview')}),
+        ('Персональная информация', {'fields': ('referrer', 'username', 'nickname', 'phone', 'avatar_preview')}),
         ('Игровая статистика', {'fields': ('knockouts', 'rating')}),
         ('Важные даты', {'fields': ('last_login', 'created_at', 'updated_at')}),
     )
 
-    readonly_fields = ['id', 'telegram_id', 'created_at', 'updated_at', 'last_login', 'avatar_preview']
+    readonly_fields = ['id', 'telegram_id', 'referrer', 'created_at', 'updated_at', 'last_login', 'avatar_preview']
 
     def avatar_icon(self, obj):
         if obj.avatar_path:

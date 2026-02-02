@@ -74,7 +74,7 @@ ul, ol {
   margin-top: 24px;
   background: linear-gradient(124deg, #221000 18.24%, #883F00 100.77%);
   border-radius: 40px;
-  min-height: 100px;
+  /*min-height: 100px;*/
 }
 
 .cardContent {

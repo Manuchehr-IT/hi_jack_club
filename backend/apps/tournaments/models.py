@@ -3,6 +3,7 @@ from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
+from typing import Tuple
 
 User = get_user_model()
 
@@ -80,17 +81,35 @@ class Tournament(models.Model):
 		"""Количество ожидающих участников"""
 		return self.registrations.filter(status=TournamentRegistration.StatusType.WAITLIST).count()
 
-	def can_register(self, user):
-		"""Можно ли зарегистрироваться на турнир"""
-		if not user or not user.id:
+	def compute_registration_status(self) -> str | None:
+		"""Возвращает статус, куда нужно зарегистрировать пользователя."""
+		if self.get_participants_count() < self.max_participants:
+			return TournamentRegistration.StatusType.REGISTERED
+
+		if self.get_waitlist_count() < self.max_waitlist:
+			return TournamentRegistration.StatusType.WAITLIST
+
+		return None
+
+	def can_register(self, user) -> Tuple[bool, str]:
+		"""Можно ли пользователю зарегистрироваться на турнир (по общим правилам)"""
+		if not user:
 			return False, "Пользователь не указан"
 
 		if self.status != self.StatusType.IN_QUEUE:
-			return False, "Регистрация возможна только для турниров в очереди"
-		if self.get_participants_count() >= self.max_participants: # Исправить и добавить WAITLIST
-			return False, "Достигнуто максимальное количество участников"
-		if self.registrations.filter(user=user, status__in=[TournamentRegistration.StatusType.REGISTERED, TournamentRegistration.StatusType.WAITLIST]).exists():
-			return False, "Вы уже зарегистрированы на этот турнир"
+			return False, "Регистрация закрыта"
+
+		if self.registrations.filter(
+			user=user,
+			status__in=[
+				TournamentRegistration.StatusType.REGISTERED,
+				TournamentRegistration.StatusType.WAITLIST]
+			).exists():
+				return False, "Вы уже зарегистрированы"
+
+		if self.get_participants_count() >= self.max_participants and self.get_waitlist_count() >= self.max_waitlist:
+			return False, "Достигнут лимит участников"
+
 		return True, ""
 
 	@property
@@ -149,22 +168,6 @@ class TournamentRegistration(models.Model):
 		verbose_name_plural = "Регистрации на турниры"
 		unique_together = ["tournament", "user"]
 		ordering = ["created_at"]
-
-	def clean(self):
-		super().clean()
-
-		# Проверяем, что регистрация возможна
-		if not self.pk: # Только для новых регистраций
-			if not self.tournament_id:
-				raise ValidationError("Необходимо выбрать турнир")
-
-			can_register, message = self.tournament.can_register(self.user)
-			if not can_register:
-				raise ValidationError(message)
-
-	def save(self, *args, **kwargs):
-		self.full_clean()
-		super().save(*args, **kwargs)
 
 	def __str__(self):
 		return f"{self.user} - {self.tournament}"

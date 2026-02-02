@@ -62,7 +62,7 @@ class TournamentAdmin(admin.ModelAdmin):
         if obj:  # Редактирование существующего турнира
             return (
                 ('Основная информация', {
-                    'fields': ('title', 'location', 'started_at', 'general_rules', 'icon')
+                    'fields': ('title', 'location', 'started_at', 'general_rules', 'max_participants', 'max_waitlist', 'icon')
                 }),
                 ('Статус', {
                     'fields': ('status_display',)
@@ -79,6 +79,19 @@ class TournamentAdmin(admin.ModelAdmin):
                 'fields': ('title', 'location', 'started_at', 'general_rules')
             }),
         )
+
+    def icon_preview(self, obj):
+        if obj.icon:
+            return format_html(
+                '''
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <img src="{}" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid #e0e0e0;" />
+                </div>
+                ''',
+                obj.icon.url
+            )
+        return format_html('<span style="color: #999;">— Нет фото —</span>')
+    icon_preview.short_description = "Иконка турнира"
 
     def participants_count(self, obj):
         return obj.get_participants_count()

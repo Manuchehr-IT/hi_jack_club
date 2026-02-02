@@ -15,6 +15,7 @@ urlpatterns = [
 		path("<int:pk>/registration-status/", tournament_registration.registration_status),
 		path("<int:pk>/register/", tournament_registration.register),
 		path("<int:pk>/unregister/", tournament_registration.unregister),
+		path("<int:pk>/availability/", tournament_registration.availability),
 		path("<int:pk>/participants/", tournament_participants.participants),
 		path("<int:pk>/start-internal/", start_tournament.start_internal),
 
