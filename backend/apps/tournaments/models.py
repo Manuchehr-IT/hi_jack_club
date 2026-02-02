@@ -1,9 +1,16 @@
+import os
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
 
 User = get_user_model()
+
+def validate_image_or_svg(file):
+	valid_extensions = ['.jpg', '.jpeg', '.png', '.gif', '.svg']
+	ext = os.path.splitext(file.name)[1].lower()
+	if ext not in valid_extensions:
+		raise ValidationError('Неподдерживаемый формат файла.')
 
 class Tournament(models.Model):
 	class StatusType(models.TextChoices):
@@ -20,10 +27,10 @@ class Tournament(models.Model):
 
 	general_rules = models.TextField(verbose_name="Общие правила")
 
-	# Иконка
-	# icon = models.CharField(max_length=50, verbose_name="Иконка", blank=True, default="")
-
 	status = models.CharField(max_length=20, choices=StatusType.choices, default=StatusType.IN_QUEUE, verbose_name="Статус")
+
+	# Иконка
+	icon = models.ImageField(upload_to="tournaments/icons/", blank=True, null=True, verbose_name="Иконка")
 
 	created_at = models.DateTimeField(auto_now_add=True, verbose_name="Создан")
 	updated_at = models.DateTimeField(auto_now=True, verbose_name="Обновлен")

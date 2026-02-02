@@ -62,7 +62,7 @@ class TournamentAdmin(admin.ModelAdmin):
         if obj:  # Редактирование существующего турнира
             return (
                 ('Основная информация', {
-                    'fields': ('title', 'location', 'started_at', 'general_rules')
+                    'fields': ('title', 'location', 'started_at', 'general_rules', 'icon')
                 }),
                 ('Статус', {
                     'fields': ('status_display',)

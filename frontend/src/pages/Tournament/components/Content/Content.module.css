@@ -1,0 +1,95 @@
+.tabsSection {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 40px;
+  position: relative;
+  overflow: hidden;
+}
+
+.button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed !important;
+}
+
+.button.participation {
+  cursor: pointer;
+  border: 1px solid #004E49;
+  background: #E5E4E2;
+  height: 60px;
+}
+
+.button.info {
+  border: 1.5px solid #24262A;
+  background: #000706;
+  height: 50px;
+}
+
+.button.participation .text {
+  color: black;
+  font-weight: bold;
+  font-size: 18px;
+  text-transform: uppercase;
+}
+
+.button.info .text {
+  font-size: 16px;
+}
+
+
+.detailsGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.detailItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.infoSection .title {
+  font-size: 20px;
+  margin-top: 24px;
+  margin-bottom: 4px;
+}
+
+.text {
+  font-size: 12px;
+}
+
+ul, ol {
+  margin-left: 24px;
+}
+
+.hintCard {
+  margin-top: 24px;
+  background: linear-gradient(124deg, #221000 18.24%, #883F00 100.77%);
+  border-radius: 40px;
+  min-height: 100px;
+}
+
+.cardContent {
+  display: flex;
+  flex-direction: column;
+  padding: 24px;
+  gap: 12px;
+}
+
+.hints {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.footerSection .icon {
+  height: 18px;
+}

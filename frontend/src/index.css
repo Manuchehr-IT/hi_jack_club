@@ -1,13 +1,17 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
 :root {
   font-family: "Inter", sans-serif;
   font-style: normal;
-  font-weight: bold;
   font-size: 18px;
-  line-height: 100%;
 
   color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #0F1A1F;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -15,32 +19,35 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+html {
+  line-height: 1.5;
+  overflow: auto; /* Оставить возможность скролла */
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
-/*body {
-  margin: 0;
-  min-width: 320px;
-  min-height: 100vh;
-  background: #0F1A1F;
-  width: 100%;
+html::-webkit-scrollbar {
+  display: none;
 }
 
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
+body {
+  font-family: 'Inter', sans-serif;
+
+  background-color: #0B0704;
+  color: white;
 }
 
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}*/
+.container {
+  padding: 16px 16px 100px;
+}
+
+
+@font-face {
+    font-family: 'Days One';
+    src: url('./assets/fonts/DaysOne-Regular.woff2') format('woff2'),
+         url('./assets/fonts/DaysOne-Regular.woff') format('woff'),
+         url('./assets/fonts/DaysOne-Regular.ttf') format('truetype'); /* fallback */
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}

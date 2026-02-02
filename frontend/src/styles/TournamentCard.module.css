@@ -58,7 +58,7 @@
   height: 24px;
 }
 
-.cardImage {
+.cardImages {
   position: absolute;
   top: 50%;
   right: 0;
@@ -66,19 +66,21 @@
   z-index: 0;
 }
 
-.cardImage img {
-  height: 200px;
+.cardImages img {
+  /*height: 180px;*/
   object-fit: contain;
 }
 
 .ellipse {
+  height: 220px;
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
 }
 
-.heel {
+.imageIcon {
+  height: 180px;
   position: relative;
   object-fit: contain;
 }

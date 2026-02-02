@@ -1,0 +1,24 @@
+.content{
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.title {
+  font-size: 20px;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.gridSection {
+  display: flex;
+  gap: 8px;
+}
+
+.faq {
+  background: #221000;
+}
+
+.support {
+  background: linear-gradient(112.69deg, #221000 24.35%, #883F00 97.61%);
+}

@@ -1,10 +1,10 @@
+import { useState } from 'react';
 import { useMe } from '@/hooks/useMe';
 import { useTelegramBackButton } from '@/hooks/telegram/useTelegramBackButton'
 import { ContentLoader } from '@/components/Loaders'
 import Page from '@/components/Page';
-import styles from './Profile.module.css';
 import ReferralIcon from '@/assets/icons/referral.jpg';
-import { useState } from 'react';
+import styles from './Profile.module.css';
 
 const Profile = () => {
   useTelegramBackButton(false);
@@ -15,8 +15,6 @@ const Profile = () => {
 
   const referralLink = (user?.referral_code && telegramBotUsername) ? `https://t.me/${telegramBotUsername}/app?startapp=${user.referral_code}` : "";
   const referralLinkContent = referralLink || <ContentLoader />
-
-  console.log("User:", user)
 
   const handleCopyLink = async () => {
     if (!referralLink) return;
@@ -100,9 +98,7 @@ const Profile = () => {
                 disabled={!referralLink}
               >
                 {/*<CopyIcon />*/}
-                <span className={styles.actionText}>
-                  {copied ? "Скопировано!" : "Копировать"}
-                </span>
+                <span className={styles.actionText}>{copied ? "Скопировано!" : "Копировать"}</span>
               </button>
               
               <button 

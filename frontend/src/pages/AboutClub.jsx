@@ -11,16 +11,6 @@ const AboutClub = () => {
 
   const { aboutClub: blocks, loading } = useAboutClub();
 
-  // Добавьте проверку загрузки
-  // if (loading) {
-  //   return <div className={styles.loading}>Загрузка...</div>;
-  // }
-
-  // Проверка на пустой массив
-  // if (!blocks || blocks.length === 0) {
-  //   return <div className={styles.empty}>Нет данных о клубе</div>;
-  // }
-
   return (
     <Page loading={loading}>
       <div className={styles.header}>
