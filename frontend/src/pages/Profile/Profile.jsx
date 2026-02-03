@@ -1,15 +1,19 @@
 import { useState } from 'react';
-import { useMe } from '@/hooks/useMe';
 import { useTelegramBackButton } from '@/hooks/telegram/useTelegramBackButton'
+import { useMe } from '@/hooks/useMe';
 import { ContentLoader } from '@/components/Loaders'
-import Page from '@/components/Page';
-import ReferralIcon from '@/assets/icons/referral.jpg';
+import { PageLoader } from '@/components/Loaders';
+import Footer from '@/components/Footer2';
+import Header from './components/Header';
 import styles from './Profile.module.css';
 
 const Profile = () => {
   useTelegramBackButton(false);
+
   const { user, loading, error } = useMe();
   const [copied, setCopied] = useState(false);
+
+  if (loading) return <PageLoader />;
 
   const telegramBotUsername = import.meta.env.VITE_TELEGRAM_BOT_USERNAME
 
@@ -54,13 +58,10 @@ const Profile = () => {
 
 
   return (
-    <Page loading={loading}>
+    <>
+      <main className="container">
 
-      <div className={styles.container}>
-        <div className={styles.header}>
-          <span className={styles.nickname}>{user?.nickname || "Nickname"}</span>
-          <img src="https://app.check-checkclub.ru/images/icons/profile-info-icon.svg" />
-        </div>
+        <Header user={user}/>
 
         {/* Статистика профиля */}
         <div className={styles.statsGrid}>
@@ -112,9 +113,9 @@ const Profile = () => {
             </div>
           </div>
         </div>
-
-      </div>
-    </Page>
+      </main>
+      <Footer/>
+    </>
   );
 };
 

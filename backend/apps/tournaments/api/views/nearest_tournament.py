@@ -1,4 +1,4 @@
-from django.db import models
+from datetime import timedelta
 from django.utils import timezone
 from drf_spectacular.utils import extend_schema
 from rest_framework.decorators import api_view, permission_classes
@@ -20,10 +20,11 @@ def nearest(request):
 	GET /api/tournaments/nearest/
 	"""
 	now = timezone.now()
+	min_start_time = now + timedelta(minutes=30)
 
 	tournament = (
 		Tournament.objects
-		.filter(status=Tournament.StatusType.IN_QUEUE, started_at__gte=now)
+		.filter(status=Tournament.StatusType.IN_QUEUE, started_at__gte=min_start_time)
 		.order_by("started_at")
 		.first()
 	)
