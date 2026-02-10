@@ -18,14 +18,19 @@ class UpdateProfileSerializer(serializers.ModelSerializer):
 		model = User
 		fields = ["nickname", "phone_code", "phone"]
 
+	def __init__(self, *args, **kwargs):
+		super().__init__(*args, **kwargs)
+		# Access context in __init__ if needed
+		self.is_signup = self.context.get('is_signup', False)
+
 	def validate(self, attrs):
-		if getattr(self, "is_signup", False):
+		if self.is_signup:
 			required = ["nickname", "phone_code", "phone"]
 			missing = [f for f in required if not attrs.get(f)]
 			if missing:
 				raise serializers.ValidationError({field: "This field is required." for field in missing})
 
-		if not getattr(self, "is_signup", False) and not attrs.get("phone"):
+		if not self.is_signup and not attrs.get("phone"):
 			return attrs
 
 		phone_code = attrs.get("phone_code", "")
@@ -40,6 +45,7 @@ class UpdateProfileSerializer(serializers.ModelSerializer):
 			raise serializers.ValidationError("Incorrect phone format")
 
 		attrs["phone"] = phonenumbers.format_number(parsed, phonenumbers.PhoneNumberFormat.E164)
+		attrs["phone_code"] = phone_code.strip()
 		return attrs
 
 	def validate_nickname(self, value):

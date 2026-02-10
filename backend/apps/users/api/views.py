@@ -12,7 +12,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from .serializers import UserSerializer, UpdateProfileSerializer, TelegramAuthSerializer, AuthResponseSerializer
 from ..factory import create_user_service
 from ..utils import create_qr
-from apps.iiko.factory import create_iiko_client
+from apps.iiko.factory import create_iiko_service
 
 User = get_user_model()
 
@@ -51,6 +51,7 @@ class TelegramAuthAPIView(APIView):
 
 @extend_schema(tags=["Users"])
 class UserViewSet(ListModelMixin, GenericViewSet):
+	serializer_class = UserSerializer
 	permission_classes = [IsAuthenticated]
 	queryset = User.objects.all()
 	filter_backends = [filters.OrderingFilter]
@@ -60,7 +61,7 @@ class UserViewSet(ListModelMixin, GenericViewSet):
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs)
 		self.user_service = create_user_service()
-		self.iiko_client = create_iiko_client()
+		self.iiko_service = create_iiko_service()
 
 	def get_queryset(self):
 		queryset = super().get_queryset()
@@ -94,18 +95,19 @@ class UserViewSet(ListModelMixin, GenericViewSet):
 		if request.user.privacy_policy_accepted:
 			return Response(UserSerializer(request.user).data)
 
-		serializer = UpdateProfileSerializer(request.user, data=request.data, partial=True, is_signup=True)
+		serializer = UpdateProfileSerializer(request.user, data=request.data, partial=True, context={"is_signup": True})
 		serializer.is_valid(raise_exception=True)
 		serializer.save(privacy_policy_accepted=True)
 
 		validated = serializer.validated_data
-		full_phone = validated["phone_code"] + validated["phone"]
+		full_phone = validated["phone"]
+		phone_number = full_phone.lstrip(validated["phone_code"])
 
-		iiko_data = self.iiko_client.create_or_update_customer(phone=full_phone, card=validated["phone"], name=request.user.first_name)
+		iiko_data = self.iiko_service.create_or_update_user(phone=full_phone, card=phone_number, name=request.user.first_name)
 		customer_id = iiko_data.get("id")
 		if customer_id:
 			request.user.iiko_id = customer_id
 			request.user.save()
-			create_qr(request.user, validated["phone"])
+			create_qr(request.user, phone_number)
 
 		return Response(UserSerializer(request.user).data)

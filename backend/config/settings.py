@@ -178,6 +178,10 @@ TIME_FORMAT = "H:i"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
+REDIS_HOST = os.getenv("REDIS_HOST")
+REDIS_PORT = int(os.getenv("REDIS_PORT", "6379"))
+REDIS_DB = int(os.getenv("REDIS_DB", "1"))
+
 CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL")
 # CELERY_RESULT_BACKEND = "redis://redis:6379/2"
 CELERY_TIMEZONE = TIME_ZONE

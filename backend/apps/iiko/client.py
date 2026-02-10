@@ -1,22 +1,47 @@
 import httpx
+import logging
+from redis import Redis
+
+logger = logging.getLogger(__name__)
 
 class IikoClient:
-	def __init__(self, base_url: str, api_key: str, organization_id: str):
+	ACCESS_TOKEN_KEY = "iiko:access_token"
+	ACCESS_TOKEN_LOCK = "iiko:access_token:lock"
+	ACCESS_TOKEN_TTL = 55 * 60  # 55 минут
+
+	def __init__(self, base_url: str, api_key: str, organization_id: str, redis_client: Redis):
 		self.base_url = base_url
 		self.api_key = api_key
 		self.organization_id = organization_id
+		self.redis = redis_client
 
-	def _get_access_token(self) -> str:
+	def _create_access_token(self) -> str:
 		url = f"{self.base_url}/access_token"
 		params = {"apiLogin": self.api_key}
 
 		response = httpx.post(url, json=params)
 		response.raise_for_status()
-		access_token = response.json()["token"]
-		return access_token
+		return response.json()["token"]
+
+	def _get_access_token(self) -> str:
+		token = self.redis.get(self.ACCESS_TOKEN_KEY)
+		if token:
+			return token.decode("utf-8")
+
+		with self.redis.lock(self.ACCESS_TOKEN_LOCK):
+			token = self.redis.get(self.ACCESS_TOKEN_KEY)
+			if token:
+				return token.decode("utf-8")
+
+			token = self._create_access_token()
+			self.redis.set(self.ACCESS_TOKEN_KEY, token, ex=self.ACCESS_TOKEN_TTL)
+
+			return token
 
 	def _get_headers(self) -> dict:
-		return {"Authorization": f"Bearer {self._get_access_token()}"}
+		token = self._get_access_token()
+		print(token)
+		return {"Authorization": f"Bearer {token}"}
 
 	def get_customer_info(self, customer_id: str, type: str = "id") -> dict:
 		url = f"{self.base_url}/loyalty/iiko/customer/info"

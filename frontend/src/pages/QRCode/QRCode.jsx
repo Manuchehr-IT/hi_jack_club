@@ -29,11 +29,7 @@ const QRCode = () => {
         <p className={styles.subtitle}>Покажите его сотруднику для сканирования</p>
 
         <div className={styles.card}>
-          <img
-            src={qrCode}
-            alt="QR Code"
-            className={styles.qr}
-          />
+          <img src={qrCode} alt="QR Code" className={styles.qr}/>
         </div>
       </div>
     </Page>

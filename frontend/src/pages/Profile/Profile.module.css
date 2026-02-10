@@ -7,10 +7,10 @@
 
 .statCard {
   flex: 1;
-  background: #f8f9ff;
+  background: linear-gradient(135deg, #001821, #00678E);
   border-radius: 16px;
   padding: 16px;
-  color: black;
+  color: white;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -52,34 +52,39 @@
 
 /* Секции */
 .sectionTitle {
+  position: relative;
   font-size: 18px;
-  color: black;
+  color: white;
   margin-bottom: 8px;
   display: flex;
   align-items: center;
   gap: 8px;
+  z-index: 2;
 }
 
 .sectionDescription {
+  position: relative;
   font-size: 14px;
-  color: #666;
+  color: grey;
   margin-bottom: 16px;
   line-height: 1.4;
+  z-index: 2;
 }
 
 /* Реферальная ссылка */
 .referralSection {
-  background: #f8f9ff;
+  position: relative;
+  background: linear-gradient(135deg, #001821, #00678E);
   border-radius: 16px;
   padding: 20px;
-  margin-bottom: 24px;
-  border: 1px solid #eef1ff;
+  z-index: 2;
+  /*border: 1px solid #eef1ff;*/
 }
 
-.referralLinkContainer {
+/*.referralLinkContainer {
   margin: 16px 0;
 }
-
+*/
 .referralLink {
   background: white;
   border: 1px solid #e0e0e0;
@@ -110,30 +115,44 @@
   gap: 8px;
   padding: 12px;
   border-radius: 12px;
-  border: 1px solid #667eea;
+  /*border: 1px solid #667eea;*/
+  border: None;
   background: white;
-  color: #667eea;
-  font-weight: 500;
+  color: black;
   cursor: pointer;
   transition: all 0.2s;
+  z-index: 2;
 }
 
 .actionButton:hover {
-  background: #f0f2ff;
+  opacity: 0.9;
 }
 
 .actionButton:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+  opacity: 0.8;
+  cursor: not-allowed !important;
 }
 
 .actionButton.copied {
-  background: #48bb78;
-  border-color: #48bb78;
+  background: skyblue;
   color: white;
 }
 
 .actionText {
   color: black;
   font-size: 14px;
+}
+
+.bgIcon {
+  position: absolute;
+  top: 0;
+  left: 93px;
+  pointer-events: none;
+}
+
+.bgIcon img {
+  height: 260px;
+  weight: 260px;
+  object-fit: contain;
+  z-index: 1;
 }

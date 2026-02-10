@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTelegramBackButton } from '@/hooks/telegram/useTelegramBackButton'
 import { useSignUp } from "@/hooks/useSignUp";
 import { useMe } from "@/hooks/useMe";
-import Page from '@/components/Page';
+import { PageLoader } from '@/components/Loaders';
 import styles from './SignUp.module.css';
 
 const SignUp = () => {
@@ -23,6 +23,8 @@ const SignUp = () => {
       navigate("/home");
     }
   }, [user, signUpLoading, navigate]);
+
+  if (userLoading) return <PageLoader/>;
 
   const handlePhoneChange = (e) => {
     const value = e.target.value.replace(/\D/g, '');
@@ -59,87 +61,82 @@ const SignUp = () => {
   const isFormValid = nickname.trim().length >= 3 && phoneNumber.length >= 10;
 
   return (
-    <Page loading={userLoading} showFooter={false}>
-      <div className={styles.container}>
-        <div className={styles.content}>
-          <header className={styles.header}>
-            <h1 className={styles.title}>Регистрация</h1>
-            <p className={styles.subtitle}>Создайте аккаунт для доступа к сервису</p>
-          </header>
+    <main className={styles.content}>
+      <header className={styles.header}>
+        <h1 className={styles.title}>Регистрация</h1>
+        <p className={styles.subtitle}>Создайте аккаунт для доступа к сервису</p>
+      </header>
 
-          <form onSubmit={handleSubmit} className={styles.form}>
-            <section className={styles.section}>
-              <label htmlFor="nickname" className={styles.label}>Никнейм</label>
-              <div className={styles.inputGroup}>
-                <input
-                  id="nickname"
-                  type="text"
-                  className={styles.input}
-                  value={nickname}
-                  onChange={handleNicknameChange}
-                  placeholder="Введите ваш никнейм"
-                  maxLength={30}
-                  required
-                  autoComplete="username"
-                  disabled={isSubmitting}
-                />
-              </div>
-            </section>
+      <form onSubmit={handleSubmit} className={styles.form}>
+        <section className={styles.section}>
+          <label htmlFor="nickname" className={styles.label}>Никнейм</label>
+          <div className={styles.inputGroup}>
+            <input
+              id="nickname"
+              type="text"
+              className={styles.input}
+              value={nickname}
+              onChange={handleNicknameChange}
+              placeholder="Введите ваш никнейм"
+              maxLength={30}
+              required
+              autoComplete="username"
+              disabled={isSubmitting}
+            />
+          </div>
+        </section>
 
-            <section className={styles.section}>
-              <label htmlFor="phone" className={styles.label}>Номер телефона</label>
-              <div className={styles.phoneInput}>
-                <select 
-                  id="countryCode"
-                  className={styles.countryCode}
-                  value={countryCode}
-                  onChange={(e) => setCountryCode(e.target.value)}
-                  disabled={isSubmitting}
-                >
-                  <option value="+7">🇷🇺 +7</option>
-                </select>
-                <input
-                  id="phone"
-                  type="tel"
-                  inputMode="numeric"
-                  className={styles.input}
-                  value={phoneNumber}
-                  onChange={handlePhoneChange}
-                  placeholder="999 123 45 67"
-                  maxLength={10}
-                  required
-                  autoComplete="tel"
-                  disabled={isSubmitting}
-                />
-              </div>
-            </section>
-
-            <div className={styles.privacy}>
-              <a 
-                href={import.meta.env.VITE_PRIVACY_POLICY} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className={styles.privacyLink}
-              >
-                Политика конфиденциальности
-              </a>
-              <p className={styles.privacyText}>
-                Нажимая "Подтвердить", вы соглашаетесь с нашей политикой конфиденциальности
-              </p>
-            </div>
-
-            <button 
-              type="submit" 
-              className={styles.submitButton}
-              disabled={!isFormValid || isSubmitting}
+        <section className={styles.section}>
+          <label htmlFor="phone" className={styles.label}>Номер телефона</label>
+          <div className={styles.phoneInput}>
+            <select 
+              id="countryCode"
+              className={styles.countryCode}
+              value={countryCode}
+              onChange={(e) => setCountryCode(e.target.value)}
+              disabled={isSubmitting}
             >
-              {isSubmitting ? (<span className={styles.loadingText}>Обработка...</span>) : ("Подтвердить")}
-            </button>
-          </form>
+              <option value="+7">🇷🇺 +7</option>
+            </select>
+            <input
+              id="phone"
+              type="tel"
+              inputMode="numeric"
+              className={styles.input}
+              value={phoneNumber}
+              onChange={handlePhoneChange}
+              placeholder="999 123 45 67"
+              maxLength={10}
+              required
+              autoComplete="tel"
+              disabled={isSubmitting}
+            />
+          </div>
+        </section>
 
+        <div className={styles.privacy}>
+          <a 
+            href={import.meta.env.VITE_PRIVACY_POLICY} 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className={styles.privacyLink}
+          >
+            Политика конфиденциальности
+          </a>
+          <p className={styles.privacyText}>
+            Нажимая "Подтвердить", вы соглашаетесь с нашей политикой конфиденциальности
+          </p>
         </div>
-      </div>
-    </Page>
+
+        <button 
+          type="submit" 
+          className={styles.submitButton}
+          disabled={!isFormValid || isSubmitting}
+        >
+          {isSubmitting ? (<span className={styles.loadingText}>Обработка...</span>) : ("Подтвердить")}
+        </button>
+      </form>
+    </main>
   );
 };
 

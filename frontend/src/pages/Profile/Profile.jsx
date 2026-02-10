@@ -5,6 +5,7 @@ import { ContentLoader } from '@/components/Loaders'
 import { PageLoader } from '@/components/Loaders';
 import Footer from '@/components/Footer2';
 import Header from './components/Header';
+import HiJackIcon from '@/assets/icons/social-network.svg'
 import styles from './Profile.module.css';
 
 const Profile = () => {
@@ -81,22 +82,20 @@ const Profile = () => {
             {/*<LinkIcon />*/}
             Пригласи друга
           </h3>
-          <p className={styles.sectionDescription}>
-            делитесь ссылкой и получайте Hi Donats за каждого приглашенного друга
-          </p>
+          <p className={styles.sectionDescription}>Делитесь ссылкой и получайте Hi Donats за каждого приглашенного друга</p>
           
           <div className={styles.referralLinkContainer}>
-            <div className={styles.referralLink}>
+            {/*<div className={styles.referralLink}>
               <span className={styles.linkText}>
                 {referralLinkContent}
               </span>
-            </div>
-            
+            </div>*/}
+
             <div className={styles.linkActions}>
               <button 
                 className={`${styles.actionButton} ${copied ? styles.copied : ""}`}
                 onClick={handleCopyLink}
-                disabled={!referralLink}
+                disabled={copied}
               >
                 {/*<CopyIcon />*/}
                 <span className={styles.actionText}>{copied ? "Скопировано!" : "Копировать"}</span>
@@ -112,6 +111,9 @@ const Profile = () => {
               </button>
             </div>
           </div>
+          <dev className={styles.bgIcon}>
+            <img src={HiJackIcon} className={styles.hiJackIcon}/>
+          </dev>
         </div>
       </main>
       <Footer/>

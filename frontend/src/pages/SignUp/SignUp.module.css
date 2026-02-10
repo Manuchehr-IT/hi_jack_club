@@ -1,5 +1,6 @@
 .content {
-  /*background: white;*/
+  background: #022927;
+  min-height: 100vh;
   padding: 40px;
 }
 
