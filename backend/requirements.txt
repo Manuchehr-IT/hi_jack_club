@@ -8,6 +8,7 @@ django-cors-headers
 drf-spectacular
 httpx
 qrcode
+phonenumbers
 Pillow
 psycopg2-binary
 pydantic-settings

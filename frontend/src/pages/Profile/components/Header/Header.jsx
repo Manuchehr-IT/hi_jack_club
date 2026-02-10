@@ -1,24 +1,28 @@
 import { useState } from 'react';
+import { IoMdSettings } from 'react-icons/io';
+import { GoCheck, GoX } from 'react-icons/go';
+import { RotatingLines } from 'react-loader-spinner';
+import { useMe } from '@/hooks/useMe';
 import EditNicknameIcon from '@/assets/icons/edit-nickname.svg';
 import styles from './Header.module.css';
 
-const Header = ({ user }) => {
+const Header = ({ user, isLoading, updateProfile }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [tempNickname, setTempNickname] = useState(user?.nickname || "<Nickname>");
 
+  console.log("isLoading:", isLoading)
+
   const handleEditClick = () => {
-    setTempNickname(user?.nickname || '');
+    setTempNickname(user?.nickname || "");
     setIsEditing(true);
   };
 
-  const handleSave = () => {
-    if (tempNickname.trim() && onSaveNickname) {
-      onSaveNickname(tempNickname.trim());
-    }
+  const handleCancel = () => {
     setIsEditing(false);
   };
 
-  const handleCancel = () => {
+  const handleSave = async () => {
+    await updateProfile({nickname: tempNickname.trim()});
     setIsEditing(false);
   };
 
@@ -27,13 +31,16 @@ const Header = ({ user }) => {
       {isEditing ? (
         <div className={styles.editContainer}>
           <input type="text" value={tempNickname} onChange={(e) => setTempNickname(e.target.value)} className={styles.nicknameInput} autoFocus/>
-          <button onClick={handleCancel} className={styles.editIcon} style={{ color: "red" }} alt="Отменить">✕</button>
-          <button onClick={handleSave} className={styles.editIcon} alt="Сохранить">✓</button>
+
+          <button onClick={handleCancel} disabled={isLoading} alt="Отменить"><GoX className={styles.cancelIcon}/></button>
+          <button onClick={handleSave} disabled={isLoading} alt="Сохранить">
+            {isLoading ? <RotatingLines color="white" height="24"/> : <GoCheck className={styles.confirmIcon}/>}
+          </button>
         </div>
       ) : (
         <>
           <span className={styles.nickname}>{user?.nickname || "Nickname"}</span>
-          <img src={EditNicknameIcon} onClick={handleEditClick} className={styles.editIcon} alt="Редактировать"/>
+          <IoMdSettings className={styles.editNicknameIcon} onClick={handleEditClick}/>
         </>
       )}
     </section>

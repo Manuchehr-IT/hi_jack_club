@@ -9,6 +9,7 @@ __pycache__/
 .env.*
 
 # Docker
+docker-compose.override.yml
 *.pid
 
 *.log

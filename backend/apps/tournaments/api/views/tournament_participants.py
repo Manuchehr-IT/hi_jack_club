@@ -10,7 +10,7 @@ from apps.tournaments.models import Tournament, TournamentRegistration
 @extend_schema(
 	tags=["Tournaments"],
 	summary="Получить участников турнира",
-	responses={200: TournamentRegistrationSerializer()}
+	responses={200: TournamentRegistrationSerializer}
 )
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])

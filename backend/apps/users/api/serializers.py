@@ -1,7 +1,9 @@
+import phonenumbers
+from phonenumbers.phonenumberutil import NumberParseException
 from rest_framework import serializers
 
 from apps.telegram.utils import parse_telegram_init_data
-from ..models import User
+from apps.users.models import User
 
 class UserSerializer(serializers.ModelSerializer):
 	class Meta:
@@ -9,27 +11,43 @@ class UserSerializer(serializers.ModelSerializer):
 		fields = ["id", "username", "avatar_path", "nickname", "phone", "referral_code", "referrals", "knockouts", "rating", "privacy_policy_accepted", "iiko_qr_code"]
 		read_only_fields = ["referral_code", "referrals", "knockouts", "rating", "privacy_policy_accepted", "created_at", "updated_at"]
 
-class UserSignUpSerializer(serializers.ModelSerializer):
+class UpdateProfileSerializer(serializers.ModelSerializer):
+	phone_code = serializers.CharField()
+
 	class Meta:
 		model = User
-		fields = ["nickname", "phone", "privacy_policy_accepted"]
+		fields = ["nickname", "phone_code", "phone"]
 
 	def validate(self, attrs):
-		required_fields = {"nickname", "phone", "privacy_policy_accepted"}
+		if getattr(self, "is_signup", False):
+			required = ["nickname", "phone_code", "phone"]
+			missing = [f for f in required if not attrs.get(f)]
+			if missing:
+				raise serializers.ValidationError({field: "This field is required." for field in missing})
 
-		missing = required_fields - attrs.keys()
-		if missing:
-			raise serializers.ValidationError({field: "This field is required." for field in missing})
+		if not getattr(self, "is_signup", False) and not attrs.get("phone"):
+			return attrs
 
+		phone_code = attrs.get("phone_code", "")
+		phone_number = attrs.get("phone", "")
+
+		full_number = f"{phone_code}{phone_number}"
+		try:
+			parsed = phonenumbers.parse(full_number, None)
+			if not phonenumbers.is_valid_number(parsed):
+				raise serializers.ValidationError("Invalid phone number")
+		except NumberParseException:
+			raise serializers.ValidationError("Incorrect phone format")
+
+		attrs["phone"] = phonenumbers.format_number(parsed, phonenumbers.PhoneNumberFormat.E164)
 		return attrs
 
-	def validate_phone(self, value):
-		return value.lstrip("+")
+	def validate_nickname(self, value):
+		nickname = value.strip()
+		if not (3 <= len(nickname) <= 32):
+			raise serializers.ValidationError("Nickname cannot be less than 3 or more than 32 characters long.")
 
-	def validate_privacy_policy_accepted(self, value):
-		if value is not True:
-			raise serializers.ValidationError("Privacy policy must be accepted.")
-		return value
+		return nickname
 
 class TelegramAuthSerializer(serializers.Serializer):
 	init_data = serializers.CharField()

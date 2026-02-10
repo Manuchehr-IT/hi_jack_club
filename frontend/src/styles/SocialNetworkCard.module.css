@@ -33,12 +33,12 @@
 
 .image {
   position: absolute;
-  right: -38.5px;
-  top: -40px;
+  right: -30.5px;
+  /*top: -40px;*/
   z-index: 0;
 }
 
 .image img {
-  height: 240px;
+  height: 160px;
   object-fit: contain;
 }

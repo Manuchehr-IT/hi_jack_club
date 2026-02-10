@@ -9,7 +9,7 @@ def create_default_socials(apps, schema_editor):
         "map": "https://yandex.ru/maps/org/khay_dzhek_klab_/83743013847?si=hkgyga7pje6fw6n1znjpxqhjk0",
         "ig": "https://www.instagram.com/hi_jack_club",
         "vk": "https://vk.com/hijackclub",
-        "tg": "https://t.me/telegram/",
+        "tg": "https://t.me/HJC_club",
         "vk_broadcast": "https://vk.com/hijackclub",
         "vk_broadcast_archive": "https://vk.com/hijackclub",
     }

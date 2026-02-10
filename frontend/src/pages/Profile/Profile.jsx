@@ -10,7 +10,7 @@ import styles from './Profile.module.css';
 const Profile = () => {
   useTelegramBackButton(false);
 
-  const { user, loading, error } = useMe();
+  const { user, loading, isLoading, error, updateProfile } = useMe();
   const [copied, setCopied] = useState(false);
 
   if (loading) return <PageLoader />;
@@ -61,7 +61,7 @@ const Profile = () => {
     <>
       <main className="container">
 
-        <Header user={user}/>
+        <Header user={user} isLoading={isLoading} updateProfile={updateProfile}/>
 
         {/* Статистика профиля */}
         <div className={styles.statsGrid}>
@@ -82,7 +82,7 @@ const Profile = () => {
             Пригласи друга
           </h3>
           <p className={styles.sectionDescription}>
-            Делитесь ссылкой и получайте бонусы за каждого приглашенного друга
+            делитесь ссылкой и получайте Hi Donats за каждого приглашенного друга
           </p>
           
           <div className={styles.referralLinkContainer}>

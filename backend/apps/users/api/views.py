@@ -9,7 +9,7 @@ from rest_framework.views import APIView
 from rest_framework.viewsets import GenericViewSet
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .serializers import UserSerializer, UserSignUpSerializer, TelegramAuthSerializer, AuthResponseSerializer
+from .serializers import UserSerializer, UpdateProfileSerializer, TelegramAuthSerializer, AuthResponseSerializer
 from ..factory import create_user_service
 from ..utils import create_qr
 from apps.iiko.factory import create_iiko_client
@@ -51,7 +51,6 @@ class TelegramAuthAPIView(APIView):
 
 @extend_schema(tags=["Users"])
 class UserViewSet(ListModelMixin, GenericViewSet):
-	serializer_class = UserSerializer
 	permission_classes = [IsAuthenticated]
 	queryset = User.objects.all()
 	filter_backends = [filters.OrderingFilter]
@@ -72,11 +71,22 @@ class UserViewSet(ListModelMixin, GenericViewSet):
 
 	@action(detail=False, methods=["get"])
 	def me(self, request):
-		serializer = self.get_serializer(request.user)
+		serializer = UserSerializer(request.user)
 		return Response(serializer.data)
 
 	@extend_schema(
-		request=UserSignUpSerializer,
+		request=UpdateProfileSerializer,
+		responses=UserSerializer,
+	)
+	@action(detail=False, methods=["patch"])
+	def update_profile(self, request):
+		serializer = UpdateProfileSerializer(request.user, data=request.data, partial=True)
+		serializer.is_valid(raise_exception=True)
+		serializer.save()
+		return Response(UserSerializer(request.user).data)
+
+	@extend_schema(
+		request=UpdateProfileSerializer,
 		responses=UserSerializer,
 	)
 	@action(detail=False, methods=["patch"])
@@ -84,19 +94,18 @@ class UserViewSet(ListModelMixin, GenericViewSet):
 		if request.user.privacy_policy_accepted:
 			return Response(UserSerializer(request.user).data)
 
-		serializer = UserSignUpSerializer(request.user, data=request.data, partial=True)
+		serializer = UpdateProfileSerializer(request.user, data=request.data, partial=True, is_signup=True)
 		serializer.is_valid(raise_exception=True)
-		serializer.save()
+		serializer.save(privacy_policy_accepted=True)
 
-		data = request.data
-		full_phone = data["phone"]
-		phone_number = full_phone[2:] # Убирает "+7" с начала номера
+		validated = serializer.validated_data
+		full_phone = validated["phone_code"] + validated["phone"]
 
-		iiko_data = self.iiko_client.create_or_update_customer(phone=data["phone"], card=phone_number, name=request.user.first_name)
+		iiko_data = self.iiko_client.create_or_update_customer(phone=full_phone, card=validated["phone"], name=request.user.first_name)
 		customer_id = iiko_data.get("id")
 		if customer_id:
 			request.user.iiko_id = customer_id
 			request.user.save()
-			create_qr(request.user, phone_number)
+			create_qr(request.user, validated["phone"])
 
 		return Response(UserSerializer(request.user).data)

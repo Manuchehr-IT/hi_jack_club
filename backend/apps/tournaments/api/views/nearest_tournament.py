@@ -5,13 +5,13 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from apps.tournaments.models import Tournament
 from apps.tournaments.api.serializers import TournamentSerializer
+from apps.tournaments.models import Tournament
 
 @extend_schema(
 	tags=["Tournaments"],
 	summary="Получить ближайший турнир",
-	responses={200: TournamentSerializer()}
+	responses={200: TournamentSerializer}
 )
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])

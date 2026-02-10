@@ -70,7 +70,7 @@ def registration_status(request, pk):
 	tags=["Tournaments"],
 	summary="Регистрация в турнире",
 	responses={
-		201: TournamentRegistrationSerializer(),
+		201: TournamentRegistrationSerializer,
 		400: {
 			"type": "object",
 			"properties": {

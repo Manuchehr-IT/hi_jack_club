@@ -2,6 +2,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  height: 48px;
   margin-bottom: 16px;
 }
 
@@ -10,8 +11,18 @@
   font-weight: bold;
 }
 
-.editNicnameIcon {
-  height: 24px;
+.editNicknameIcon {
+  font-size: 32px;
+  cursor: pointer;
+  color: grey;
+}
+
+.editNicknameIcon:hover {
+  opacity: 0.7;
+}
+
+.editNicknameIcon:active {
+  opacity: 0.5;
 }
 
 .editContainer {
@@ -19,20 +30,48 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  /*width: 100%;*/
 }
 
 .nicknameInput {
   flex: 1;
-  height: 32px;
+  font-size: 18px;
+  height: 40px;
   border-radius: 30px;
+  padding: 0 12px;
+  border: None;
+  outline: None;
 }
 
-.editContainer .editIcon {
-  width: 32px;
-  height: 32px;
+.editContainer button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  width: 40px;
+  height: 40px;
   background: #1b1718;
   cursor: pointer;
   border-radius: 10px;
   border: None;
+}
+
+.editContainer button:hover{
+  opacity: 0.7;
+}
+
+.editContainer button:active{
+  opacity: 0.5;
+}
+
+.editContainer button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed !important;
+}
+
+.cancelIcon {
+  color: red;
+}
+
+.confirmIcon {
+  color: green;
 }

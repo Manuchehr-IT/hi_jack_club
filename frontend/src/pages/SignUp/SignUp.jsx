@@ -39,10 +39,11 @@ const SignUp = () => {
 
     setIsSubmitting(true);
     try {
-      const fullPhone = countryCode + phoneNumber;
+      // const fullPhone = countryCode + phoneNumber;
       const result = await signUp({
         nickname,
-        phone: fullPhone,
+        phone_code: countryCode,
+        phone: phoneNumber,
         privacy_policy_accepted: true,
       });
       console.log("Регистрация успешна:", result);

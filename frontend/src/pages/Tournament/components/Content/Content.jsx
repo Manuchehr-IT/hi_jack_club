@@ -47,14 +47,6 @@ const Content = ({ tournament }) => {
   return (
     <main className="container">
       <section className={styles.tabsSection}>
-        {tournament.status === "IN_QUEUE" ? (
-        <button className={`${styles.button} ${styles.participation}`} onClick={handleClick} disabled={isLoading || !!error || (!isRegistrationAvailable && !registrationStatus)}>
-          <span className={styles.text}>
-            {isLoading ? <ContentLoader /> : buttonText}
-          </span>
-        </button>
-        ): null}
-
         <button className={`${styles.button} ${styles.info}`}>
           <img src={CardSuits} alt="card-suits" className={styles.icon} />
           <p className={styles.text}>О турнире</p>
@@ -87,6 +79,16 @@ const Content = ({ tournament }) => {
         ) || (<p className={styles.text}>Особенности не указаны</p>)}
 
       </section>
+
+      {tournament.status === "IN_QUEUE" ? (
+        <section className={styles.registerSection}>
+          <button className={`${styles.button} ${styles.participation}`} onClick={handleClick} disabled={isLoading || !!error || (!isRegistrationAvailable && !registrationStatus)}>
+            <span className={styles.text}>
+              {isLoading ? <ContentLoader /> : buttonText}
+            </span>
+          </button>
+        </section>
+        ): null}
 
       {hintTitle ? (
         <section className={styles.footerSection}>

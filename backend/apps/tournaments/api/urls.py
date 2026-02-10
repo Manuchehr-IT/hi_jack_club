@@ -10,7 +10,6 @@ app_name = "tournaments"
 
 urlpatterns = [
 	path("tournaments/", include([
-		# Кастомные endpoints через @api_view
 		path("nearest/", nearest_tournament.nearest),
 		path("<int:pk>/registration-status/", tournament_registration.registration_status),
 		path("<int:pk>/register/", tournament_registration.register),
@@ -19,7 +18,6 @@ urlpatterns = [
 		path("<int:pk>/participants/", tournament_participants.participants),
 		path("<int:pk>/start-internal/", start_tournament.start_internal),
 
-		# Router.urls В САМОМ КОНЦЕ
 		path("", include(router.urls)),
 	]))
 ]
