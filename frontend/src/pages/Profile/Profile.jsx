@@ -95,7 +95,7 @@ const Profile = () => {
               <button 
                 className={`${styles.actionButton} ${copied ? styles.copied : ""}`}
                 onClick={handleCopyLink}
-                disabled={copied}
+                disabled={!referralLink || copied}
               >
                 {/*<CopyIcon />*/}
                 <span className={styles.actionText}>{copied ? "Скопировано!" : "Копировать"}</span>

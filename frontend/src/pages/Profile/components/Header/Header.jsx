@@ -8,7 +8,7 @@ import styles from './Header.module.css';
 
 const Header = ({ user, isLoading, updateProfile }) => {
   const [isEditing, setIsEditing] = useState(false);
-  const [tempNickname, setTempNickname] = useState(user?.nickname || "<Nickname>");
+  const [tempNickname, setTempNickname] = useState(user?.nickname || "");
 
   console.log("isLoading:", isLoading)
 
@@ -33,7 +33,7 @@ const Header = ({ user, isLoading, updateProfile }) => {
           <input type="text" value={tempNickname} onChange={(e) => setTempNickname(e.target.value)} className={styles.nicknameInput} autoFocus/>
 
           <button onClick={handleCancel} disabled={isLoading} alt="Отменить"><GoX className={styles.cancelIcon}/></button>
-          <button onClick={handleSave} disabled={isLoading} alt="Сохранить">
+          <button onClick={handleSave} disabled={isLoading | !user?.nickname} alt="Сохранить">
             {isLoading ? <RotatingLines color="white" height="24"/> : <GoCheck className={styles.confirmIcon}/>}
           </button>
         </div>
