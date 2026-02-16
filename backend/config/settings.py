@@ -68,8 +68,8 @@ INSTALLED_APPS = [
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework_simplejwt.authentication.JWTAuthentication",
-        "rest_framework.authentication.SessionAuthentication",
-        "rest_framework.authentication.TokenAuthentication",
+        # "rest_framework.authentication.SessionAuthentication",
+        # "rest_framework.authentication.TokenAuthentication",
     ],
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticated",
@@ -96,6 +96,7 @@ SPECTACULAR_SETTINGS = {
 }
 
 MIDDLEWARE = [
+    "apps.core.middleware.DebugHeadersMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.security.SecurityMiddleware",
@@ -235,13 +236,21 @@ LOGGING = {
         },
         "file": {
             "class": "logging.handlers.RotatingFileHandler",
-            "level": "INFO",
+            "level": "DEBUG",
             "formatter": "detailed",
             "filename": LOGGER_FILE,
             "maxBytes": LOGGER_MAX_SIZE * 1024 * 1024,
             "backupCount": LOGGER_BACKUP_COUNT,
             "encoding": "utf8",
         },
+    },
+    "loggers": {
+        # DRF
+        "rest_framework": {"handlers": ["console", "file"], "level": "DEBUG", "propagate": False},
+        # SimpleJWT
+        "rest_framework_simplejwt": {"handlers": ["console", "file"], "level": "DEBUG", "propagate": False},
+        # Твой middleware / utils
+        "apps.core.middleware": {"handlers": ["console", "file"], "level": "DEBUG", "propagate": False},
     },
     "root": {
         "handlers": ["console", "file"],

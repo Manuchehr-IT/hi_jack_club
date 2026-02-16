@@ -1,9 +1,9 @@
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.utils.crypto import get_random_string
 from typing import Tuple
 
 from celery_app.tasks.telegram import send_message
-from config.settings import TELEGRAM_BOT_TOKEN, TELEGRAM_BOT_ADMIN_IDS
 from apps.telegram.schemas import TelegramUser
 from apps.telegram.utils import save_avatar
 
@@ -27,7 +27,7 @@ class UserService:
 			if referral_code:
 				referrer = User.objects.filter(referral_code=referral_code).first()
 
-			if str(telegram_id) in TELEGRAM_BOT_ADMIN_IDS:
+			if str(telegram_id) in settings.TELEGRAM_BOT_ADMIN_IDS:
 				password = get_random_string(12)
 
 				user = User.objects.create_superuser(
@@ -40,7 +40,7 @@ class UserService:
 				)
 
 				send_message.delay(
-					telegram_bot_token=TELEGRAM_BOT_TOKEN,
+					telegram_bot_token=settings.TELEGRAM_BOT_TOKEN,
 					chat_id=telegram_id,
 					text=f"<b>Данные для входа в админку:</b>\n<b>login:</b> {telegram_id}\n<b>password:</b> {password}"
 				)

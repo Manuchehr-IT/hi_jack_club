@@ -1,7 +1,7 @@
 .content {
   background: #022927;
   min-height: 100vh;
-  padding: 40px;
+  padding: 25px;
 }
 
 .header {
@@ -134,4 +134,11 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
+}
+
+.hintText {
+  margin-top: 8px;
+  text-align: center;
+  font-size: 14px;
+  color: red;
 }

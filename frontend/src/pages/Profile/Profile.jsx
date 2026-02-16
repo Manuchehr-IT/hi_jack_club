@@ -24,38 +24,74 @@ const Profile = () => {
   const handleCopyLink = async () => {
     if (!referralLink) return;
 
-    try {
-      await navigator.clipboard.writeText(referralLink);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
-      console.error("Failed to copy:", err);
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      try {
+        await navigator.clipboard.writeText(referralLink);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+        return;
+      } catch (err) {
+        console.warn("Clipboard API failed, trying fallback:", err);
+      }
+    } else {
+      fallbackCopy();
     }
   };
 
-  const handleShare = async () => {
+  // Запасной метод для старых браузеров и Android
+  const fallbackCopy = () => {
+    try {
+      // Создаем временный textarea элемент
+      const textarea = document.createElement('textarea');
+      textarea.value = referralLink;
+
+      // Делаем элемент невидимым
+      textarea.style.position = 'fixed';
+      textarea.style.top = '-9999px';
+      textarea.style.left = '-9999px';
+      textarea.style.opacity = '0';
+
+      document.body.appendChild(textarea);
+
+      // Выделяем текст и копируем
+      textarea.focus();
+      textarea.select();
+      textarea.setSelectionRange(0, 99999); // Для мобильных устройств
+
+      const successful = document.execCommand('copy');
+
+      // Удаляем временный элемент
+      document.body.removeChild(textarea);
+
+      if (successful) {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      } else {
+        console.error("Fallback copy failed");
+        // Здесь можно показать пользователю сообщение с просьбой скопировать вручную
+      }
+    } catch (err) {
+      console.error("Fallback copy error:", err);
+    }
+  };
+
+  const handleShare = () => {
     if (!referralLink) return;
 
-    const tg = window.Telegram?.WebApp;
+    const text = "Присоединяйся к нам!";
+    const shareUrl =
+      `https://t.me/share/url?` +
+      `url=${encodeURIComponent(referralLink)}` +
+      `&text=${encodeURIComponent(text)}`;
 
-    if (tg && tg.shareToChat) {
-      tg.shareToChat(referralLink, "Присоединяйся к нам");
+    if (window.Telegram?.WebApp?.openTelegramLink) {
+      window.Telegram.WebApp.openTelegramLink(shareUrl);
     } else {
-      handleShareFallback();
+      // если открыли вне Telegram
+      window.open(shareUrl, "_blank");
     }
   };
 
-  const handleShareFallback = () => {
-    if (navigator.share) {
-      navigator.share({
-        title: "Присоединяйся!",
-        text: "Присоединяйся к нашему сообществу",
-        url: referralLink,
-      }).catch(console.error);
-    } else {
-      handleCopyLink();
-    }
-  };
 
 
   return (

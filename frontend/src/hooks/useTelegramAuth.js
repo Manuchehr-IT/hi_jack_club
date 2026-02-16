@@ -19,7 +19,6 @@ export function useTelegramAuth() {
         localStorage.setItem("access_token", access_token);
         setIsAuth(true);
       }
-
     } catch (error) {
       console.error("Telegram Auth Error:", error);
     } finally {

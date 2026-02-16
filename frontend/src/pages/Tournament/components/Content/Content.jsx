@@ -7,8 +7,9 @@ import CardSuits from '@/assets/icons/card-suits.svg';
 import styles from './Content.module.css';
 
 const Content = ({ tournament }) => {
-  const { availability, registrationStatus, isLoading, error, checkRegistrationStatus, register, unregister } = useTournamentRegister(tournament.id);
+  const { availability, registrationData, isLoading, error, checkRegistrationData, register, unregister } = useTournamentRegister(tournament.id);
 
+  const registrationStatus = registrationData?.status
   const isRegistrationAvailable = availability && (availability.registrations > 0 || availability.waitlists > 0);
 
   const buttonText = (() => {
@@ -30,7 +31,10 @@ const Content = ({ tournament }) => {
     if (tournament.status !== "IN_QUEUE") return null;
     if (error) return null;
     if (!registrationStatus) return ["По нашим правилам гости должны заблаговременно отменять регистрацию, чтобы не забирать место у желающих из очереди."];
-    if (registrationStatus === "WAITLIST") return ["Как только освободится место, мы автоматически добавим вас в основной список."];
+    if (registrationStatus === "WAITLIST") return [
+      `Вы в списке ожидания на ${registrationData.waitlist_position} месте`,
+      "Как только освободится место, мы автоматически добавим вас в основной список."
+    ];
     return null;
   })();
 

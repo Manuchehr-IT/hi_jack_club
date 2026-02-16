@@ -3,6 +3,7 @@ from django.contrib.auth import get_user_model
 from rest_framework import filters
 from rest_framework.decorators import action
 from rest_framework.mixins import ListModelMixin
+from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -43,7 +44,7 @@ class TelegramAuthAPIView(APIView):
 		refresh_token = RefreshToken.for_user(user)
 
 		return Response({
-			"refresh": str(refresh_token),
+			# "refresh": str(refresh_token),
 			"access": str(refresh_token.access_token),
 			"user": UserSerializer(user).data,
 			"is_new_user": created
@@ -53,6 +54,7 @@ class TelegramAuthAPIView(APIView):
 class UserViewSet(ListModelMixin, GenericViewSet):
 	serializer_class = UserSerializer
 	permission_classes = [IsAuthenticated]
+	pagination_class = LimitOffsetPagination
 	queryset = User.objects.all()
 	filter_backends = [filters.OrderingFilter]
 	ordering_fields = ["created_at", "knockouts", "rating"]
@@ -63,16 +65,13 @@ class UserViewSet(ListModelMixin, GenericViewSet):
 		self.user_service = create_user_service()
 		self.iiko_service = create_iiko_service()
 
-	def get_queryset(self):
-		queryset = super().get_queryset()
-		limit = self.request.query_params.get("limit")
-		if limit and limit.isdigit():
-			queryset = queryset[:int(limit)]
-		return queryset
+	# def get_queryset(self):
+	# 	queryset = super().get_queryset()
+	# 	return queryset
 
 	@action(detail=False, methods=["get"])
 	def me(self, request):
-		serializer = UserSerializer(request.user)
+		serializer = self.get_serializer(request.user)
 		return Response(serializer.data)
 
 	@extend_schema(
@@ -88,7 +87,18 @@ class UserViewSet(ListModelMixin, GenericViewSet):
 
 	@extend_schema(
 		request=UpdateProfileSerializer,
-		responses=UserSerializer,
+		responses={
+			200: UserSerializer,
+			409: {
+				"type": "object",
+				"properties": {
+					"code": {"type": "string"},
+					"message": {"type": "string"},
+					"field": {"type": "string"},
+					"conflict_with": {"type": "string"},
+				}
+			}
+		}
 	)
 	@action(detail=False, methods=["patch"])
 	def sign_up(self, request):
@@ -100,8 +110,28 @@ class UserViewSet(ListModelMixin, GenericViewSet):
 		serializer.save(privacy_policy_accepted=True)
 
 		validated = serializer.validated_data
+		nickname = validated["nickname"]
 		full_phone = validated["phone"]
 		phone_number = full_phone.lstrip(validated["phone_code"])
+
+		# if User.objects.exclude(pk=request.user.pk).filter(phone=full_phone).exists():
+		# 	return CustomValidationError(
+		# 		code="phone_already_taken",
+		# 		message="This phone number is already in use",
+		# 		field="phone",
+		# 		conflict_with="existing_user",
+		# 		status=409
+		# 	)
+
+		# if User.objects.exclude(pk=request.user.pk).filter(nickname=nickname).exists():
+		# 	return CustomValidationError(
+		# 		code="nickname_already_taken",
+		# 		message="This nickname is already occupied",
+		# 		field="nickname",
+		# 		conflict_with="existing_user",
+		# 		status=409
+		# 	)
+
 
 		iiko_data = self.iiko_service.create_or_update_user(phone=full_phone, card=phone_number, name=request.user.first_name)
 		customer_id = iiko_data.get("id")

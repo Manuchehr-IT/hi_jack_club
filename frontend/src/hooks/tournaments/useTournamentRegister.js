@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import api from '@/api/api';
 
 export const useTournamentRegister = (tournamentId) => {
-  const [registrationStatus, setRegistrationStatus] = useState(null);
+  const [registrationData, setRegistrationData] = useState(null);
   const [availability, setAvailability] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -23,7 +23,7 @@ export const useTournamentRegister = (tournamentId) => {
     }
   }, [tournamentId]);
 
-  const checkRegistrationStatus = useCallback(async () => {
+  const checkRegistrationData = useCallback(async () => {
     if (!tournamentId) return;
 
     setIsLoading(true);
@@ -31,7 +31,7 @@ export const useTournamentRegister = (tournamentId) => {
 
     try {
       const response = await api.get(`/tournaments/${tournamentId}/registration-status/`);
-      setRegistrationStatus(response.data.status);
+      setRegistrationData(response.data);
     } catch (err) {
       setError(err.message || "Не удалось проверить участие в турнире");
     } finally {
@@ -47,7 +47,7 @@ export const useTournamentRegister = (tournamentId) => {
 
     try {
       const response = await api.post(`/tournaments/${tournamentId}/register/`);
-      setRegistrationStatus(response.data.status);
+      setRegistrationData(response.data);
       checkAvailability();
     } catch (err) {
       if (err.response?.status === 400) {
@@ -68,7 +68,7 @@ export const useTournamentRegister = (tournamentId) => {
 
     try {
       const response = await api.delete(`/tournaments/${tournamentId}/unregister/`);
-      setRegistrationStatus(null);
+      setRegistrationData(null);
       checkAvailability();
     } catch (err) {
       if (err.response?.status === 400) {
@@ -84,9 +84,9 @@ export const useTournamentRegister = (tournamentId) => {
   useEffect(() => {
     if (tournamentId) {
       checkAvailability(tournamentId);
-      checkRegistrationStatus(tournamentId);
+      checkRegistrationData(tournamentId);
     }
-  }, [tournamentId, checkAvailability, checkRegistrationStatus]);
+  }, [tournamentId, checkAvailability, checkRegistrationData]);
 
-  return { availability, registrationStatus, isLoading, error, checkRegistrationStatus, register, unregister };
+  return { availability, registrationData, isLoading, error, checkRegistrationData, register, unregister };
 };

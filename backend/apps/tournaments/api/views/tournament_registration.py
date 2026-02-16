@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import transaction
 from drf_spectacular.utils import extend_schema
 from rest_framework.decorators import api_view, permission_classes
@@ -6,6 +7,7 @@ from rest_framework.response import Response
 
 from apps.tournaments.models import Tournament, TournamentRegistration
 from apps.tournaments.api.serializers import TournamentRegistrationSerializer
+from celery_app.tasks.telegram.send_telegram_message import send_message
 
 @extend_schema(
 	tags=["Tournaments"],
@@ -47,6 +49,9 @@ def availability(request, pk):
 					"enum": TournamentRegistration.StatusType.values,
 					"nullable": True
 				},
+				"position": {
+					"type": "integer"
+				}
 			}
 		},
 	}
@@ -64,7 +69,10 @@ def registration_status(request, pk):
 
 	registration = TournamentRegistration.objects.filter(tournament=tournament, user=user).first()
 
-	return Response({"status": registration.status if registration else None})
+	return Response({
+		"status": registration.status if registration else None,
+		"waitlist_position": registration.get_waitlist_position() if registration else None
+	})
 
 @extend_schema(
 	tags=["Tournaments"],
@@ -138,16 +146,54 @@ def unregister(request, pk):
 		if tournament.status != Tournament.StatusType.IN_QUEUE:
 			return Response({"detail": "Регистрация закрыта"}, status=400)
 
+		old_waitlist = TournamentRegistration.objects.filter(
+			tournament=tournament,
+			status=TournamentRegistration.StatusType.WAITLIST
+		).order_by("created_at")
+
+		old_position_telegram_ids = {position: registration.user.telegram_id for position, registration in enumerate(old_waitlist[:5], start=1)}
+
 		deleted_count, _ = TournamentRegistration.objects.filter(tournament=tournament, user=user).delete()
 
 		if tournament.get_participants_count() < tournament.max_participants:
-			waitlist_registration = TournamentRegistration.objects.filter(
+			first_in_line = TournamentRegistration.objects.filter(
 				tournament=tournament,
 				status=TournamentRegistration.StatusType.WAITLIST
 			).order_by("created_at").first()
 
-			if waitlist_registration:
-				waitlist_registration.status = TournamentRegistration.StatusType.REGISTERED
-				waitlist_registration.save()
+			if first_in_line:
+				first_in_line.status = TournamentRegistration.StatusType.REGISTERED
+				first_in_line.save()
+
+				send_message.delay(
+					telegram_bot_token=settings.TELEGRAM_BOT_TOKEN,
+					chat_id=first_in_line.user.telegram_id,
+					text=f"♠ Вы в основном составе!"
+				)
+
+		# Должно сработать даже если отменят запись те кто в списке ожидания, а не только те кто уже зарегистрированы
+		updated_waitlist = TournamentRegistration.objects.filter(
+			tournament=tournament,
+			status=TournamentRegistration.StatusType.WAITLIST
+		).order_by("created_at")
+
+		for position, registration in enumerate(updated_waitlist[:5], start=1):
+			if old_position_telegram_ids.get(position) == registration.user.telegram_id:
+				continue
+			messages = {
+				1: "Вы первый в очереди.\nПо сути — уже почти в игре. Будьте на связи.",
+				2: "Вы второй номер в резерве.\nЧуть терпения — и вы за столом.",
+				3: "Вы в тройке лидеров резерва.\nШансы попасть в турнир сегодня — высокие.",
+				4: "Четвёртая позиция в очереди.\nНебольшая дистанция — и вы за столом.",
+				5: "Замыкаете топ-5 ожидания.\nИгра ещё может повернуться в вашу сторону."
+			}
+
+			message = messages.get(position)
+			if message:
+				send_message.delay(
+					telegram_bot_token=settings.TELEGRAM_BOT_TOKEN,
+					chat_id=registration.user.telegram_id,
+					text=message
+				)
 
 	return Response(status=204)

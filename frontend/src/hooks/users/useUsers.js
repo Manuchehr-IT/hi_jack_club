@@ -11,7 +11,7 @@ export const useUsers = () => {
     setError(null);
 
     try {
-      const params = { ordering: "-rating" };
+      const params = { ordering: "-rating,created_at" };
       const response = await api.get(`/users/`, { params });
       const usersData = response.data;
       setUsers(Array.isArray(usersData) ? usersData : []);

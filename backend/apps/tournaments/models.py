@@ -169,5 +169,19 @@ class TournamentRegistration(models.Model):
 		unique_together = ["tournament", "user"]
 		ordering = ["created_at"]
 
+	def get_waitlist_position(self):
+		if self.status != self.StatusType.WAITLIST:
+			return None
+
+		# Считаем сколько записей в ожидании создано раньше текущей
+		position = TournamentRegistration.objects.filter(
+			tournament=self.tournament,
+			status=self.StatusType.WAITLIST,
+			created_at__lt=self.created_at
+		).count()
+
+		# +1 потому что позиции начинаются с 1, а не с 0
+		return position + 1
+    
 	def __str__(self):
 		return f"{self.user} - {self.tournament}"

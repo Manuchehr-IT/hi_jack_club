@@ -16,8 +16,19 @@ class TournamentSerializer(serializers.ModelSerializer):
 
 class TournamentRegistrationSerializer(serializers.ModelSerializer):
 	user = UserSerializer(read_only=True)
+	waitlist_position = serializers.SerializerMethodField()
 
 	class Meta:
 		model = TournamentRegistration
-		fields = ["id", "user", "status", "table_number", "created_at"]
+		fields = ["id", "user", "status", "table_number", "created_at", "waitlist_position"]
 		ordering = ["created_at"]
+
+	def get_waitlist_position(self, obj):
+		"""Возвращает позицию только если статус WAITLIST"""
+		if obj.status == TournamentRegistration.StatusType.WAITLIST:
+			return TournamentRegistration.objects.filter(
+				tournament=obj.tournament,
+				status=TournamentRegistration.StatusType.WAITLIST,
+				created_at__lt=obj.created_at
+			).count() + 1
+		return None

@@ -41,7 +41,6 @@ const SignUp = () => {
 
     setIsSubmitting(true);
     try {
-      // const fullPhone = countryCode + phoneNumber;
       const result = await signUp({
         nickname,
         phone_code: countryCode,
@@ -49,10 +48,10 @@ const SignUp = () => {
         privacy_policy_accepted: true,
       });
       console.log("Регистрация успешна:", result);
-      await userFetch();
-      // navigate("/home");
+      navigate("/home");
     } catch (error) {
       console.error("Ошибка регистрации:", error);
+      throw err;
     } finally {
       setIsSubmitting(false);
     }
@@ -128,13 +127,12 @@ const SignUp = () => {
           </p>
         </div>
 
-        <button 
-          type="submit" 
-          className={styles.submitButton}
-          disabled={!isFormValid || isSubmitting}
-        >
-          {isSubmitting ? (<span className={styles.loadingText}>Обработка...</span>) : ("Подтвердить")}
-        </button>
+        <div>
+          <button type="submit" className={styles.submitButton} disabled={!isFormValid || isSubmitting}>
+            {isSubmitting ? (<span className={styles.loadingText}>Обработка...</span>) : ("Подтвердить")}
+          </button>
+          {signUpError && <p className={styles.hintText}>{signUpError}</p>}
+        </div>
       </form>
     </main>
   );
