@@ -5,7 +5,7 @@ import { ContentLoader } from '@/components/Loaders'
 import { PageLoader } from '@/components/Loaders';
 import Footer from '@/components/Footer2';
 import Header from './components/Header';
-import HiJackIcon from '@/assets/icons/social-network.svg'
+import HiJackIcon from '@/assets/icons/social-network.svg';
 import styles from './Profile.module.css';
 
 const Profile = () => {
@@ -78,13 +78,15 @@ const Profile = () => {
   const handleShare = () => {
     if (!referralLink) return;
 
-    const text = "Присоединяйся к нам!";
+    const fullText = "\nHi, Jack — игра начинается с тебя!\nХод за тобой — переходи по ссылке.";
+
     const shareUrl =
       `https://t.me/share/url?` +
       `url=${encodeURIComponent(referralLink)}` +
-      `&text=${encodeURIComponent(text)}`;
+      `&text=${encodeURIComponent(fullText)}`;
 
     if (window.Telegram?.WebApp?.openTelegramLink) {
+      console.log(window.Telegram.WebApp)
       window.Telegram.WebApp.openTelegramLink(shareUrl);
     } else {
       // если открыли вне Telegram
