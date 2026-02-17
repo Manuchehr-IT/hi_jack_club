@@ -20,7 +20,7 @@ const Ratings = () => {
   if (isLoading) return <PageLoader/>;
 
   return (
-    <main classname={styles.container}>
+    <main className={styles.container}>
       <div className={styles.header}>
         <h1 className={styles.title}>Рейтинг Hi, Jack Club!</h1>
       </div>
