@@ -4,7 +4,7 @@ import { useUsers } from '@/hooks/users/useUsers';
 import { PageLoader } from '@/components/Loaders';
 import Footer from '@/components/Footer2';
 import BronzeIcon from '@/assets/icons/rating/hi_jack_bronze.svg'
-import SilverIcon from '@/assets/icons/rating/hi_jack_silver.svg'
+import SilverIcon from '@/assets/icons/rating/hi_jack_silver_v21.svg'
 import GoldIcon from '@/assets/icons/rating/hi_jack_gold.svg'
 import HiJackGlobal from '@/assets/icons/rating/Poker_Hall_of_Fame.svg'
 import HiJackMonthly from '@/assets/icons/rating/Hot_Series_Month.svg'
