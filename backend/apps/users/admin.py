@@ -1,7 +1,9 @@
+import csv
+
 from django.contrib import admin
 from django.contrib.auth import get_user_model
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
-# from django.contrib.auth.models import Group
+from django.http import HttpResponse
 from django.utils.html import format_html
 from django.utils.timezone import localtime
 
@@ -15,6 +17,7 @@ class UserAdmin(BaseUserAdmin):
     list_editable = ['knockouts', 'rating']
     search_fields = ['id', 'telegram_id', 'nickname', 'username']
     ordering = ['-created_at']
+    actions = ['export_as_csv']
 
     fieldsets = (
         ('Идентификатор', {'fields': ('id', 'telegram_id')}),
@@ -24,6 +27,32 @@ class UserAdmin(BaseUserAdmin):
     )
 
     readonly_fields = ['id', 'telegram_id', 'referrer', 'created_at', 'updated_at', 'last_login', 'avatar_preview']
+
+    def export_as_csv(self, request, queryset):
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename=users.csv'
+
+        writer = csv.writer(response)
+        # Заголовки
+        writer.writerow(['ID', "Telegram ID", "Referrer ID", 'Nickname', 'Username', 'Phone', 'Knockouts', 'Rating', 'Created At'])
+
+        # Данные
+        for user in queryset:
+            writer.writerow([
+                user.id,
+                user.telegram_id,
+                user.referrer.id if user.referrer else None,
+                user.nickname,
+                user.username,
+                user.phone,
+                user.knockouts,
+                user.rating,
+                user.created_at.strftime("%d.%m.%Y %H:%M")
+            ])
+
+        return response
+
+    export_as_csv.short_description = "Экспорт выбранных пользователей в CSV"
 
     def formatted_created_at(self, obj):
         return localtime(obj.created_at).strftime("%d.%m.%Y %H:%M")
