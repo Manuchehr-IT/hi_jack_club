@@ -53,6 +53,11 @@
   white-space: pre-line;
 }
 
+.text a {
+  color: #4f8cff;
+  text-decoration: underline;
+}
+
 ul, ol {
   margin-left: 24px;
 }
