@@ -1,17 +1,9 @@
-import os
 from django.contrib.auth import get_user_model
-from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
 from typing import Tuple
 
 User = get_user_model()
-
-def validate_image_or_svg(file):
-	valid_extensions = ['.jpg', '.jpeg', '.png', '.gif', '.svg']
-	ext = os.path.splitext(file.name)[1].lower()
-	if ext not in valid_extensions:
-		raise ValidationError('Неподдерживаемый формат файла.')
 
 class Tournament(models.Model):
 	class StatusType(models.TextChoices):
@@ -182,6 +174,6 @@ class TournamentRegistration(models.Model):
 
 		# +1 потому что позиции начинаются с 1, а не с 0
 		return position + 1
-    
+
 	def __str__(self):
 		return f"{self.user} - {self.tournament}"

@@ -11,6 +11,7 @@ app_name = "tournaments"
 urlpatterns = [
 	path("tournaments/", include([
 		path("nearest/", nearest_tournament.nearest),
+		path("today-status/", nearest_tournament.today_status),
 		path("<int:pk>/registration-status/", tournament_registration.registration_status),
 		path("<int:pk>/register/", tournament_registration.register),
 		path("<int:pk>/unregister/", tournament_registration.unregister),

@@ -3,15 +3,17 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 # from django.contrib.auth.models import Group
 from django.utils.html import format_html
+from django.utils.timezone import localtime
 
 User = get_user_model()
 
 @admin.register(User)
 class UserAdmin(BaseUserAdmin):
-    list_display = ['avatar_icon', 'id', 'telegram_id', 'referrer', 'nickname', 'username', 'created_at']
+    list_display = ['avatar_icon', 'id', 'telegram_id', 'referrer', 'nickname', 'username', 'phone', 'knockouts', 'rating', 'formatted_created_at']
     list_display_links = ['avatar_icon', 'id', 'telegram_id']
     list_filter = ['is_superuser', 'created_at']
-    search_fields = ['id', 'telegram_id', 'referrer', 'nickname', 'username']
+    list_editable = ['knockouts', 'rating']
+    search_fields = ['id', 'telegram_id', 'nickname', 'username']
     ordering = ['-created_at']
 
     fieldsets = (
@@ -22,6 +24,11 @@ class UserAdmin(BaseUserAdmin):
     )
 
     readonly_fields = ['id', 'telegram_id', 'referrer', 'created_at', 'updated_at', 'last_login', 'avatar_preview']
+
+    def formatted_created_at(self, obj):
+        return localtime(obj.created_at).strftime("%d.%m.%Y %H:%M")
+    formatted_created_at.short_description = "Created at"
+    formatted_created_at.admin_order_field = "created_at"
 
     def avatar_icon(self, obj):
         if obj.avatar_path:
