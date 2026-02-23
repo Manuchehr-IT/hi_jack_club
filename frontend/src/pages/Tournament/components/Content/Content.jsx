@@ -1,3 +1,4 @@
+import Linkify from "linkify-react";
 import { useTournamentRegister } from '@/hooks/tournaments'
 import { ContentLoader } from '@/components/Loaders';
 import { formatTournamentDate } from '@/utils/formatTournamentDate';
