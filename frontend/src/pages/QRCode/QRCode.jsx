@@ -46,7 +46,7 @@ const QRCode = () => {
           <div className={styles.card}>
             <img src={qrCode} alt="QR Code" className={styles.qr}/>
           </div>
-          {tournamentStatusData && <span className={styles.tournamentHint}>«{tournament_title}» - {participant_status}</span>}
+          {tournamentStatusData && <span className={styles.tournamentHint}>{tournament_title} - {participant_status}</span>}
         </div>
       </main>
       <Footer/>
