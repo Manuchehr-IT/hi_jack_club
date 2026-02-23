@@ -72,9 +72,9 @@ const Content = ({ tournament }) => {
 
         <h2 className={styles.title}>Общие правила</h2>
         <p className={styles.text}>
-          <Linkify options={{target: "_blank", rel: "noopener noreferrer"}}>
-            {tournament.general_rules || "Правила не указаны."}
-          </Linkify>
+          {/*<Linkify options={{target: "_blank", rel: "noopener noreferrer"}}>*/}
+          {tournament.general_rules || "Правила не указаны."}
+          {/*</Linkify>*/}
         </p>
 
         <h2 className={styles.title}>Особенности</h2>
