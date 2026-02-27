@@ -15,6 +15,8 @@ const QRCode = () => {
 
   if (loading && isLoading) return <PageLoader/>;
 
+  console.log({tournamentStatusData})
+
   const tournament_title = tournamentStatusData?.title;
   const participant_status = tournamentStatusData
     ? (

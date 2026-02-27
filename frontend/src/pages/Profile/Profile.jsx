@@ -149,9 +149,9 @@ const Profile = () => {
               </button>
             </div>
           </div>
-          <dev className={styles.bgIcon}>
+          <div className={styles.bgIcon}>
             <img src={HiJackIcon} className={styles.hiJackIcon}/>
-          </dev>
+          </div>
         </div>
       </main>
       <Footer/>

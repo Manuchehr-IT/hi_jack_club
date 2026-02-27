@@ -34,9 +34,13 @@ export const useSignUp = () => {
           setError("Этот номер телефона уже используется")
         } else if (err.response?.data?.code == "nickname_already_taken") {
           setError("Этот никнейм уже занят")
+        } else if (err.response?.data?.code == "iiko_user_already_exists") {
+          setError("Пользователь с таким номером уже существует в системе (iiko)")
         }
-      // } else {
+      } else if (err.response?.status === 503 && err.response?.data?.details?.original_error) {
+        setError(err.response.data.details.original_error)
       } else if (err.response?.data) {
+        console.log("STATUS:", err.response.status)
         setError(`Ошибка: ${JSON.stringify(err.response.data, null, 2)}`)
       } else {
         setError(`Неизвестная ошибка: ${err.response.message}`)

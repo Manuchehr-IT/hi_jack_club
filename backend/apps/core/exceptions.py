@@ -8,5 +8,5 @@ class CustomValidationError(APIException):
 		self.detail = {
 			"code": code,
 			"message": message,
-			# **kwargs,
+			"details": kwargs,
 		}

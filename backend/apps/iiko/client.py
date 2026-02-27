@@ -14,12 +14,13 @@ class IikoClient:
 		self.api_key = api_key
 		self.organization_id = organization_id
 		self.redis = redis_client
+		self._client = httpx.Client(timeout=15)
 
 	def _create_access_token(self) -> str:
 		url = f"{self.base_url}/access_token"
 		params = {"apiLogin": self.api_key}
 
-		response = httpx.post(url, json=params)
+		response = self._client.post(url, json=params)
 		response.raise_for_status()
 		return response.json()["token"]
 
@@ -40,14 +41,16 @@ class IikoClient:
 
 	def _get_headers(self) -> dict:
 		token = self._get_access_token()
-		print(token)
-		return {"Authorization": f"Bearer {token}"}
+		return {
+			"Authorization": f"Bearer {token}",
+			"Timeout": "10"
+		}
 
 	def get_customer_info(self, customer_id: str, type: str = "id") -> dict:
 		url = f"{self.base_url}/loyalty/iiko/customer/info"
-		params = {"customer_id": customer_id, "type": type, "organizationId": self.organization_id}
+		params = {type: customer_id, "type": type, "organizationId": self.organization_id}
 
-		response = httpx.post(url, headers=self._get_headers(), json=params)
+		response = self._client.post(url, headers=self._get_headers(), json=params)
 		response.raise_for_status()
 		return response.json()
 
@@ -60,6 +63,6 @@ class IikoClient:
 			"cardNumber": card,
 			"name": name,
 		}
-		response = httpx.post(url, headers=self._get_headers(), json=params)
+		response = self._client.post(url, headers=self._get_headers(), json=params)
 		response.raise_for_status()
 		return response.json()

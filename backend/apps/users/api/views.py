@@ -1,3 +1,4 @@
+import logging
 from drf_spectacular.utils import extend_schema
 from django.contrib.auth import get_user_model
 from rest_framework import filters
@@ -13,9 +14,12 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from .serializers import UserSerializer, UpdateProfileSerializer, TelegramAuthSerializer, AuthResponseSerializer
 from ..factory import create_user_service
 from ..utils import create_qr
+from apps.core.exceptions import CustomValidationError
 from apps.iiko.factory import create_iiko_service
 
 User = get_user_model()
+
+logger = logging.getLogger()
 
 class TelegramAuthAPIView(APIView):
 	permission_classes = [AllowAny]
@@ -42,6 +46,7 @@ class TelegramAuthAPIView(APIView):
 		user, created = self.user_service.get_or_create_from_telegram(tg_data.user, tg_data.start_param)
 
 		refresh_token = RefreshToken.for_user(user)
+		logger.info(f"TOKEN [{user.id}]: {refresh_token}")
 
 		return Response({
 			# "refresh": str(refresh_token),
@@ -105,14 +110,42 @@ class UserViewSet(ListModelMixin, GenericViewSet):
 		if request.user.privacy_policy_accepted:
 			return Response(UserSerializer(request.user).data)
 
-		serializer = UpdateProfileSerializer(request.user, data=request.data, partial=True, context={"is_signup": True})
+		serializer = UpdateProfileSerializer(request.user, data=request.data, partial=True, context={"request": request, "is_signup": True})
 		serializer.is_valid(raise_exception=True)
-		serializer.save(privacy_policy_accepted=True)
 
 		validated = serializer.validated_data
 		nickname = validated["nickname"]
 		full_phone = validated["phone"]
 		phone_number = full_phone.lstrip(validated["phone_code"])
+
+		try:
+			iiko_user = self.iiko_service.get_user_info_by_phone(phone=full_phone)
+			if iiko_user:
+				raise CustomValidationError(
+					code="iiko_user_already_exists",
+					message="A user with this number already exists in iiko",
+					status_code=409,
+					field="phone",
+					conflict_with="existing_iiko_user",
+				)
+
+			iiko_data = self.iiko_service.create_or_update_user(phone=full_phone, card=phone_number, name=request.user.first_name)
+			customer_id = iiko_data.get("id")
+			if customer_id:
+				request.user.iiko_id = customer_id
+				request.user.save()
+				create_qr(request.user, phone_number)
+		except Exception as err:
+			logger.error("Iiko [sign_up]", exc_info=err)
+			raise CustomValidationError(
+				code="iiko_api_error",
+				message="Iiko API service error",
+				status_code=503,
+				original_error=str(err)
+			)
+
+		serializer.save(privacy_policy_accepted=True)
+
 
 		# if User.objects.exclude(pk=request.user.pk).filter(phone=full_phone).exists():
 		# 	return CustomValidationError(
@@ -132,12 +165,5 @@ class UserViewSet(ListModelMixin, GenericViewSet):
 		# 		status=409
 		# 	)
 
-
-		iiko_data = self.iiko_service.create_or_update_user(phone=full_phone, card=phone_number, name=request.user.first_name)
-		customer_id = iiko_data.get("id")
-		if customer_id:
-			request.user.iiko_id = customer_id
-			request.user.save()
-			create_qr(request.user, phone_number)
 
 		return Response(UserSerializer(request.user).data)

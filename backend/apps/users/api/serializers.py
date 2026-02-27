@@ -90,7 +90,7 @@ class UpdateProfileSerializer(serializers.ModelSerializer):
 		if user and user.pk:
 			queryset = queryset.exclude(pk=user.pk)
 
-		if queryset.filter(nickname__iexact=nickname).exists():
+		if queryset.exclude(pk=user.pk if user else None).filter(nickname__iexact=nickname).exists():
 			existing_user = queryset.filter(nickname__iexact=nickname).first()
 			original_nickname = existing_user.nickname if existing_user else nickname
 
