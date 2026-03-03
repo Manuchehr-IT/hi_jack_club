@@ -34,7 +34,7 @@ class UserAdmin(BaseUserAdmin):
 
         writer = csv.writer(response)
         # Заголовки
-        writer.writerow(['ID', "Telegram ID", "Referrer ID", 'Nickname', 'Username', 'Phone', 'Knockouts', 'Rating', 'Created At'])
+        writer.writerow(['ID', "Telegram ID", "Referrer ID", 'Nickname', 'Username', 'First name', 'Phone', 'Knockouts', 'Rating', 'Created At'])
 
         # Данные
         for user in queryset:
@@ -44,6 +44,7 @@ class UserAdmin(BaseUserAdmin):
                 user.referrer.id if user.referrer else None,
                 user.nickname,
                 user.username,
+                user.first_name,
                 user.phone,
                 user.knockouts,
                 user.rating,
