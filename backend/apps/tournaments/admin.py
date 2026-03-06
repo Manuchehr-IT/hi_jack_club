@@ -226,10 +226,11 @@ class TournamentAdmin(admin.ModelAdmin):
 
 @admin.register(TournamentRegistration)
 class TournamentRegistrationAdmin(admin.ModelAdmin):
-    list_display = ['id', 'tournament', 'user', 'status_badge', 'table_number', 'created_at_compact']
+    list_display = ['id', 'tournament', 'user_id', 'user_nickname', 'user_username', 'status_badge', 'created_at_compact']
     list_filter = ['status', 'tournament', 'created_at']
     search_fields = ['user__username', 'user__nickname', 'tournament__title']
     readonly_fields = ['created_at', 'updated_at']
+    list_select_related = ['user', 'tournament']
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == "tournament":
@@ -237,6 +238,7 @@ class TournamentRegistrationAdmin(admin.ModelAdmin):
             kwargs["queryset"] = Tournament.objects.filter(status=Tournament.StatusType.IN_QUEUE)
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
+    @admin.display(description='Статус')
     def status_badge(self, obj):
         status_config = {
             'REGISTERED': ('🟢', 'green', 'Зарегистрирован'),
@@ -245,12 +247,21 @@ class TournamentRegistrationAdmin(admin.ModelAdmin):
         }
         emoji, color, text = status_config.get(obj.status, ('⚫', 'gray', obj.status))
         return format_html(
-            '{} <span style="background: {}; color: white; padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: 500;">{}</span>',
+            '<span style="white-space: nowrap;">{} '
+            '<span style="background: {}; color: white; padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: 500;">{}</span>'
+            '</span>',
             emoji, color, text
         )
-    status_badge.short_description = 'Статус'
 
+    @admin.display(ordering="user__nickname", description="Nickname")
+    def user_nickname(self, obj):
+        return obj.user.nickname
+
+    @admin.display(ordering="user__username", description="Username")
+    def user_username(self, obj):
+        return obj.user.username
+
+    @admin.display(ordering='created_at', description='Зарегистрирован')
     def created_at_compact(self, obj):
         # return obj.created_at.strftime('%d.%m.%Y %H:%M')
         return timezone.localtime(obj.created_at).strftime('%d.%m.%Y %H:%M')
-    created_at_compact.short_description = 'Зарегистрирован'
