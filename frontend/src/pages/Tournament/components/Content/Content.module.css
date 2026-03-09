@@ -103,5 +103,7 @@ ul, ol {
 }
 
 .footerSection .icon {
-  height: 18px;
+  color: white;
+  /*height: 18px;*/
+  font-size: 18px;
 }

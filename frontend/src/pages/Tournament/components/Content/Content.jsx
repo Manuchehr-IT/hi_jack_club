@@ -1,4 +1,6 @@
 import Linkify from "linkify-react";
+import { MdLocationOn } from "react-icons/md";
+import { MdTimer } from "react-icons/md";
 import { useTournamentRegister } from '@/hooks/tournaments'
 import { ContentLoader } from '@/components/Loaders';
 import { formatTournamentDate } from '@/utils/formatTournamentDate';
@@ -62,11 +64,11 @@ const Content = ({ tournament }) => {
         <h2 className={styles.title}>Когда и где</h2>
         <div className={styles.detailsGrid}>
           <div className={styles.detailItem}>
-            <img src="https://app.check-checkclub.ru/images/icons/location-pin-icon.svg" alt="Локация" className={styles.icon} />
+            <MdLocationOn className={styles.icon} />
             <p className={styles.text}>{tournament.location}</p>
           </div>
           <div className={styles.detailItem}>
-            <img src="https://app.check-checkclub.ru/images/icons/time-icon.svg" alt="Время" className={styles.icon} />
+            <MdTimer className={styles.icon} />
             <p className={styles.text}>{formatTournamentDate(tournament.started_at)}</p>
           </div>
         </div>
