@@ -148,6 +148,9 @@ services:
     build:
       context: frontend
       dockerfile: Dockerfile.${ENVIRONMENT}
+      args:
+        VITE_API_URL: https://${BACKEND_DOMAIN}/api
+        VITE_ALLOWED_HOSTS: ${FRONTEND_DOMAIN}
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.frontend_poker.rule=Host(`${FRONTEND_DOMAIN}`)"
@@ -159,8 +162,6 @@ services:
     env_file:
       - frontend/.env.${ENVIRONMENT}
     environment:
-      VITE_API_URL: https://${BACKEND_DOMAIN}/api
-      VITE_ALLOWED_HOSTS: ${FRONTEND_DOMAIN}
       CHOKIDAR_USEPOLLING: true
     networks:
       - app-network
