@@ -1,7 +1,8 @@
+import logging
 from aiogram import Bot
 from aiogram.types import Chat, Message, InlineKeyboardMarkup
 
-from infrastructure.logger import logger
+logger = logging.getLogger()
 
 class SafeMessage:
 	"""Утилита для безопасного вызова методов Message, предотвращает исключения"""

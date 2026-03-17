@@ -4,7 +4,6 @@ class BaseCallbackData(CallbackData, prefix="base"):
 	"""
 	role - Роль пользователя (например: user/admin/moder)
 	action - Действие (например: menu, back, open, close)
-	access - Платный и/или бесплатный доступ (free, paid, any)
 	"""
 	role: str
 	action: str

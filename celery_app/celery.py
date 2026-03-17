@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 app = Celery(
 	"celery",
 	broker=settings.celery.broker_url,
-	backend=None,
+	backend=settings.celery.backend_url,
 )
 
 app.autodiscover_tasks(["celery_app.tasks"])

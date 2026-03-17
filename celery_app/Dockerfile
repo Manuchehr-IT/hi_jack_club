@@ -9,4 +9,4 @@ RUN pip install --no-cache-dir -r /app/celery_app/requirements.txt
 COPY . /app/celery_app
 
 # Команда для запуска Celery
-CMD ["celery", "-A", "celery_app", "worker", "-l", "INFO"]
+CMD ["celery", "-A", "celery_app", "worker", "-l", "INFO", "-c 1"]

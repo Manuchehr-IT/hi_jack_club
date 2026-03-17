@@ -22,9 +22,15 @@ class MediaProcessing:
 
 	@staticmethod
 	def parse_media_messages(messages: List[Message]):
-		return [
-			{"type": "photo", "file_id": message.photo[-1].file_id}
+		media = [
+			{"type": "photo", "media": message.photo[-1].file_id}
 			if message.photo else
-			{"type": "video", "file_id": message.video.file_id}
+			{"type": "video", "media": message.video.file_id}
 			for message in messages
 		]
+
+		if media and messages[0].caption:
+			media[0]["caption"] = messages[0].html_text
+			media[0]["parse_mode"] = "HTML"
+
+		return media

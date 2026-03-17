@@ -3,9 +3,10 @@ from django.contrib.auth import get_user_model
 from django.utils.crypto import get_random_string
 from typing import Tuple
 
-from celery_app.tasks.telegram import send_message
 from apps.telegram.schemas import TelegramUser
 from apps.telegram.utils import save_avatar
+from celery_app.tasks.telegram import send_telegram
+from celery_app.tasks.telegram.schemas import SendMethod
 
 User = get_user_model()
 
@@ -39,8 +40,9 @@ class UserService:
 					password=password,
 				)
 
-				send_message.delay(
+				send_telegram.delay(
 					telegram_bot_token=settings.TELEGRAM_BOT_TOKEN,
+					method=SendMethod.TEXT,
 					chat_id=telegram_id,
 					text=f"<b>Данные для входа в админку:</b>\n<b>login:</b> {telegram_id}\n<b>password:</b> {password}"
 				)

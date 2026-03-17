@@ -1,49 +1,42 @@
 import httpx
 import logging
-import os
 
 logger = logging.getLogger(__name__)
 
 class TelegramAPIClient:
-    PARSE_MODE = "HTML"
-    """Синхронный клиент для Telegram Bot API"""
+	"""Синхронный клиент для Telegram Bot API"""
 
-    def __init__(self, token: str | None = None):
-        self.token = token or os.getenv("TELEGRAM_BOT_TOKEN")
-        self.base_url = f"https://api.telegram.org/bot{self.token}"
-        self.client = httpx.Client(timeout=30)
+	def __init__(self, token: str, parse_mode: str = "HTML"):
+		self.token = token
+		self.base_url = "https://api.telegram.org"
+		self.client = httpx.Client(timeout=30)
+		self.parse_mode = parse_mode
 
-    def __del__(self):
-        if hasattr(self, "client"):
-            self.client.close()
+	def request(self, method: str, **kwargs):
+		url = f"{self.base_url}/bot{self.token}/{method}"
+		kwargs.update({"parse_mode": self.parse_mode})
 
-    def send_message(self, chat_id: int, text: str, **kwargs):
-        """Синхронная отправка сообщения"""
-        url = f"{self.base_url}/sendMessage"
+		response = self.client.post(url, json=kwargs)
+		response.raise_for_status()
+		return response.json()
 
-        payload = {
-            "chat_id": chat_id,
-            "text": text,
-            "parse_mode": self.PARSE_MODE,
-            **kwargs
-        }
+	# def send_message(self, chat_id: int, text: str, **kwargs):
+	# 	"""Синхронная отправка сообщения"""
+	# 	kwargs.update({"chat_id": chat_id, "text": text})
+	# 	return self.request(method="sendMessage", **kwargs)
 
-        response = self.client.post(url, json=payload)
-        response.raise_for_status()
-        return response.json()
+	# def send_photo(self, chat_id: int, photo_url: str, **kwargs):
+	# 	"""Синхронная отправка фото"""
+	# 	kwargs.update({"chat_id": chat_id, "photo": photo_url})
+	# 	return self.request(method="sendPhoto", **kwargs)
 
-    def send_photo(self, chat_id: int, photo_url: str, caption: str = "", **kwargs):
-        """Синхронная отправка фото"""
-        url = f"{self.base_url}/sendPhoto"
+_clients: dict[str, TelegramAPIClient] = {}
 
-        payload = {
-            "chat_id": chat_id,
-            "photo": photo_url,
-            "caption": caption,
-            "parse_mode": self.PARSE_MODE,
-            **kwargs
-        }
+def get_client(token: str) -> TelegramAPIClient:
+	client = _clients.get(token)
 
-        response = self.client.post(url, json=payload)
-        response.raise_for_status()
-        return response.json()
+	if client is None:
+		client = TelegramAPIClient(token)
+		_clients[token] = client
+
+	return client

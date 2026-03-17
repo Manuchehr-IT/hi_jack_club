@@ -38,8 +38,7 @@ services:
       - .env
     environment:
       ENVIRONMENT: ${ENVIRONMENT}
-      CELERY_BROKER_URL: ${CELERY_BROKER_URL}
-      APP_DOMAIN: ${BACKEND_DOMAIN}
+      APP_API_URL: https://${BACKEND_DOMAIN}/api
       PYTHONPATH: /app
     depends_on:
       postgres:
@@ -61,6 +60,7 @@ services:
       APP_DOMAIN: ${BACKEND_DOMAIN}
       APP_HOST: ${BACKEND_HOST}
       APP_PORT: ${BACKEND_PORT}
+      APP_API_URL: https://${BACKEND_DOMAIN}/api
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.backend_poker.rule=Host(`${BACKEND_DOMAIN}`) && (PathPrefix(`/api`) || PathPrefix(`/admin`))"
@@ -131,6 +131,8 @@ services:
       APP_DOMAIN: ${TELEGRAM_BOT_DOMAIN}
       APP_HOST: ${TELEGRAM_BOT_HOST}
       APP_PORT: ${TELEGRAM_BOT_PORT}
+      APP_URL: https://${FRONTEND_DOMAIN}
+      APP_API_URL: https://${BACKEND_DOMAIN}/api
     volumes:
       - ./telegram_bot/logs:/app/logs
       - ./celery_app:/app/celery_app:ro
@@ -157,9 +159,8 @@ services:
     env_file:
       - frontend/.env.${ENVIRONMENT}
     environment:
-      APP_DOMAIN: ${FRONTEND_DOMAIN}
-      APP_HOST: ${FRONTEND_HOST}
-      APP_PORT: ${FRONTEND_PORT}
+      VITE_API_URL: https://${BACKEND_DOMAIN}/api
+      VITE_ALLOWED_HOSTS: ${FRONTEND_DOMAIN}
       CHOKIDAR_USEPOLLING: true
     networks:
       - app-network

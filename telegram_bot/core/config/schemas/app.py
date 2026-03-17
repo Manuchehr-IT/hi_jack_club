@@ -9,10 +9,12 @@ class AppSettings(BaseSettings):
 	time_zone: str
 
 	url: str
+	api_url: str
 
 	domain: str
 	host: str
 	port: int
+
 
 	@property
 	def languages_list(self) -> List[str]:

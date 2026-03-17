@@ -34,7 +34,10 @@ async def create_app() -> FastAPI:
 	@asynccontextmanager
 	async def lifespan(app: FastAPI):
 		try:
-			await bot.set_webhook(url=f"{settings.app.domain}/webhook") # Добавить 'https://' если не запустится
+			await bot.set_webhook(
+				url=f"https://{settings.app.domain}/webhook",
+				allowed_updates=["message", "callback_query"]
+			)
 			yield  # Здесь работает приложение
 		except Exception as e:
 			logger.error(f"⚠️ Startup failed: {e}", exc_info=True)
@@ -81,6 +84,18 @@ async def create_app() -> FastAPI:
 	# @app.get("/health-bot")
 	# async def health_check():
 	# 	return {"message": "ok", "status": "healthy"}
+
+	@app.get("/debug/webhook")
+	async def debug_webhook():
+		"""Диагностика вебхука"""
+		webhook_info = await bot.get_webhook_info()
+
+		return {
+			"url": webhook_info.url,
+			"allowed_updates": webhook_info.allowed_updates,
+			"pending_updates": webhook_info.pending_update_count,
+			"last_error": webhook_info.last_error_message
+		}
 
 	return app
 

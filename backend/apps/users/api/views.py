@@ -1,11 +1,12 @@
 import logging
 from drf_spectacular.utils import extend_schema
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from rest_framework import filters
 from rest_framework.decorators import action
 from rest_framework.mixins import ListModelMixin
 from rest_framework.pagination import LimitOffsetPagination
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework import permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import GenericViewSet
@@ -22,7 +23,7 @@ User = get_user_model()
 logger = logging.getLogger()
 
 class TelegramAuthAPIView(APIView):
-	permission_classes = [AllowAny]
+	permission_classes = [permissions.AllowAny]
 	authentication_classes = []
 
 	def __init__(self):
@@ -55,10 +56,25 @@ class TelegramAuthAPIView(APIView):
 			"is_new_user": created
 		})
 
+
+class IsAuthenticatedOrInternalApi(permissions.BasePermission):
+	"""Проверка секретного ключа для внутренних API"""
+
+	def has_permission(self, request, view):
+		if request.method == "OPTIONS":
+			return True
+
+		secret_key = request.headers.get("X-Internal-Api-Key")
+		if secret_key and secret_key == settings.SECRET_KEY:
+			return True
+
+		return request.user and request.user.is_authenticated
+
+
 @extend_schema(tags=["Users"])
 class UserViewSet(ListModelMixin, GenericViewSet):
 	serializer_class = UserSerializer
-	permission_classes = [IsAuthenticated]
+	permission_classes = [IsAuthenticatedOrInternalApi]
 	pagination_class = LimitOffsetPagination
 	queryset = User.objects.all()
 	filter_backends = [filters.OrderingFilter]

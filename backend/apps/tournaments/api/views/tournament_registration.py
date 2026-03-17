@@ -7,7 +7,8 @@ from rest_framework.response import Response
 
 from apps.tournaments.models import Tournament, TournamentRegistration
 from apps.tournaments.api.serializers import TournamentRegistrationSerializer
-from celery_app.tasks.telegram.send_telegram_message import send_message
+from celery_app.tasks.telegram import send_telegram
+from celery_app.tasks.telegram.schemas import SendMethod
 
 @extend_schema(
 	tags=["Tournaments"],
@@ -165,8 +166,9 @@ def unregister(request, pk):
 				first_in_line.status = TournamentRegistration.StatusType.REGISTERED
 				first_in_line.save()
 
-				send_message.delay(
+				send_telegram.delay(
 					telegram_bot_token=settings.TELEGRAM_BOT_TOKEN,
+					method=SendMethod.TEXT,
 					chat_id=first_in_line.user.telegram_id,
 					text=f"♠ Вы в основном составе!"
 				)
@@ -190,8 +192,9 @@ def unregister(request, pk):
 
 			message = messages.get(position)
 			if message:
-				send_message.delay(
+				send_telegram.delay(
 					telegram_bot_token=settings.TELEGRAM_BOT_TOKEN,
+					method=SendMethod.TEXT,
 					chat_id=registration.user.telegram_id,
 					text=message
 				)
