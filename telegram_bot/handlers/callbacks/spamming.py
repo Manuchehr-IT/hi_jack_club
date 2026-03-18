@@ -100,10 +100,10 @@ async def handle_run(call: CallbackQuery, callback_data: SpammingCallbackData, s
 		spamming_id=spamming_id
 	)
 
-	# await SafeMessage.message_delete(message=call.message)
+	await SafeMessage.message_delete(message=call.message)
 	await call.message.answer(text=text)
 
-	# await state.clear()
+	await state.clear()
 
 	# await redis.hset(f"spamming_id:{spamming_id}", mapping={
 	# 	"total": total_users,

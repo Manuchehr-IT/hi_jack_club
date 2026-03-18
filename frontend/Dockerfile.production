@@ -1,16 +1,25 @@
 # Stage 1: сборка фронтенда
 FROM node:20-alpine AS builder
 
+ARG VITE_API_URL
+ARG VITE_ALLOWED_HOSTS
+
+ENV VITE_API_URL=$VITE_API_URL
+ENV VITE_ALLOWED_HOSTS=$VITE_ALLOWED_HOSTS
+
 WORKDIR /app
 
+# Копируем package файлы сначала (для кэширования слоев)
 COPY package.json package-lock.json ./
 RUN npm install
 
-COPY . .
-
-# Копируем env файл
+# Копируем env файлы
 COPY .env.production .env
 
+# Копируем остальной код
+COPY . .
+
+# Сборка
 RUN npm run build
 
 # Stage 2: serve build
