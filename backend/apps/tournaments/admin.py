@@ -5,6 +5,7 @@ from django.urls import path
 from django.utils.html import format_html
 from django.utils import timezone
 
+from .factory import create_tournament_service
 from .models import Tournament, TournamentFeature, TournamentRegistration
 
 class TournamentFeatureForm(forms.ModelForm):
@@ -51,6 +52,7 @@ class TournamentAdmin(admin.ModelAdmin):
     list_filter = ['status']
     search_fields = ['title', 'location']
     ordering = ['-started_at']
+    actions = ['update_rating']
 
     class Media:
         css = {
@@ -79,6 +81,17 @@ class TournamentAdmin(admin.ModelAdmin):
                 'fields': ('title', 'location', 'started_at', 'general_rules', 'max_participants', 'max_waitlist', 'icon')
             }),
         )
+
+    @admin.action(description="Обновить рейтинг пользователей турнира из OLAP отчёта")
+    def update_rating(self, request, queryset):
+        tournament_service = create_tournament_service()
+        count = 0
+
+        for tournament in queryset:
+            tournament_service.process_olap_report(tournament.id)
+            count += 1
+
+        self.message_user(request, f"Обновлено {count} турниров")
 
     # def icon_preview(self, obj):
     #     if obj.icon:
@@ -226,7 +239,7 @@ class TournamentAdmin(admin.ModelAdmin):
 
 @admin.register(TournamentRegistration)
 class TournamentRegistrationAdmin(admin.ModelAdmin):
-    list_display = ['id', 'tournament', 'user_id', 'user_nickname', 'user_username', 'status_badge', 'created_at_compact']
+    list_display = ['id', 'tournament', 'tournament_status', 'user_nickname', 'user_username', 'knockouts', 'points', 'status_badge', 'attended', 'created_at_compact']
     list_filter = ['status', 'tournament', 'created_at']
     search_fields = ['user__username', 'user__nickname', 'tournament__title']
     readonly_fields = ['created_at', 'updated_at']
@@ -252,6 +265,10 @@ class TournamentRegistrationAdmin(admin.ModelAdmin):
             '</span>',
             emoji, color, text
         )
+
+    @admin.display(ordering="tournament__status", description="Tournament status")
+    def tournament_status(self, obj):
+        return obj.tournament.status
 
     @admin.display(ordering="user__nickname", description="Nickname")
     def user_nickname(self, obj):

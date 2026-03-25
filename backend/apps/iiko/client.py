@@ -41,10 +41,7 @@ class IikoClient:
 
 	def _get_headers(self) -> dict:
 		token = self._get_access_token()
-		return {
-			"Authorization": f"Bearer {token}",
-			"Timeout": "10"
-		}
+		return {"Authorization": f"Bearer {token}"}
 
 	def get_customer_info(self, customer_id: str, type: str = "id") -> dict:
 		url = f"{self.base_url}/loyalty/iiko/customer/info"
