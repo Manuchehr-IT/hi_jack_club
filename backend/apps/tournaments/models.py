@@ -1,3 +1,4 @@
+from decimal import Decimal
 from django.contrib.auth import get_user_model
 from django.db import models
 from django.utils import timezone
@@ -152,8 +153,10 @@ class TournamentRegistration(models.Model):
 	status = models.CharField(max_length=20, choices=StatusType.choices, default=StatusType.REGISTERED, verbose_name="Статус регистрации")
 
 	# Игровая статистика
-	knockouts = models.IntegerField(default=0, verbose_name="Нокауты")
-	points = models.IntegerField(default=0, verbose_name="Очки рейтинга")
+	knockouts = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal("0.00"), verbose_name="Нокауты")
+	points = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal("0.00"), verbose_name="Очки рейтинга")
+	# knockouts = models.IntegerField(default=0, verbose_name="Нокауты")
+	# points = models.IntegerField(default=0, verbose_name="Очки рейтинга")
 	attended = models.BooleanField(default=False, verbose_name="Пользователь присутствовал")
 
 	created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата регистрации")
