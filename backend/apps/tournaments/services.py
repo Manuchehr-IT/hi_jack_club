@@ -46,7 +46,7 @@ class TournamentService:
 		}
 		tournament_points_fond_distribution_top_15 = Decimal("50")
 
-		result = self.iiko_service.get_olap_report_by_date(tournament.created_at.date())
+		result = self.iiko_service.get_olap_report_by_date(tournament.started_at.date())
 		data = sorted(result["data"], key=lambda x: x["DishServicePrintTime"])
 
 		# phones = {i["Delivery.CustomerPhone"] for i in data}
