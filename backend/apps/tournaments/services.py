@@ -1,3 +1,4 @@
+import logging
 from uuid import UUID
 from decimal import Decimal
 from django.conf import settings
@@ -7,6 +8,8 @@ from .models import Tournament, TournamentRegistration
 from apps.iiko.services import IikoService
 
 User = get_user_model()
+
+logger = logging.getLogger(__name__)
 
 class TournamentService:
 	def __init__(self, iiko_service: IikoService) -> None:
@@ -79,12 +82,16 @@ class TournamentService:
 
 
 		phones = list(tournament_users.keys())
+		logger.info(f"count phones: {len(phones)}")
 
 		users = User.objects.filter(phone__in=phones)
 		users_map = {u.phone: u for u in users}
 
 		registrations = TournamentRegistration.objects.filter(tournament=tournament, user__phone__in=phones).select_related("user")
 		registrations_map = {r.user.phone: r for r in registrations}
+
+		logger.info(f"Users [MAP]: {len(users_map)}")
+		logger.info(f"Registrations [MAP]: {len(registrations_map)}")
 
 		to_update = []
 		for phone, data in tournament_users.items():
@@ -100,5 +107,7 @@ class TournamentService:
 			reg.points = data["points"]
 
 			to_update.append(reg)
+
+		logger.info(f"to_update: {to_update}")
 
 		TournamentRegistration.objects.bulk_update(to_update, ["knockouts", "points"])
