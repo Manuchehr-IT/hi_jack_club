@@ -52,7 +52,7 @@ class TournamentService:
 		# card_numbers = {i["Delivery.CustomerCardNumber"] for i in data}
 
 		events_data = [i for i in data if i.get("DishName", "").lower() in tournament_events and i.get("Delivery.CustomerCardNumber") is not None]
-		logger.info(f"events_data: {events_data}")
+		# logger.info(f"events_data: {events_data}")
 		finish_game_data = [i for i in events_data if i.get("DishName", "").lower() == "финишгейм"]
 		tournament_users = {i["Delivery.CustomerCardNumber"]: {"knockouts": Decimal("0"), "points": Decimal("0")} for i in events_data}
 
@@ -61,17 +61,15 @@ class TournamentService:
 			event = record["DishName"].lower()
 			points = tournament_events.get(event, Decimal("0")) * count
 
-			if points > Decimal("0"):
+			if points > Decimal("0") and "энтри" in event:
 				tournament_users[record["Delivery.CustomerCardNumber"]]["points"] += points
 
 			if "баунти" in event and "баунтиголд" not in event:
 				tournament_users[record["Delivery.CustomerCardNumber"]]["knockouts"] += Decimal("1") * count
 
-		logger.info(f"tournament_user 1 ['9267227752']: {tournament_users['9267227752']}")
-
-		fg_print_data = {data["Delivery.CustomerCardNumber"]: data["DishServicePrintTime"] for data in finish_game_data}
-		logger.info(f"finish_game_data [card_numbers | time]: {fg_print_data}")
 		top_n = len(tournament_points_fond_distribution)
+
+		logger.info(f"BANK points: {tournament_points_fond}")
 
 		for i, record in enumerate(finish_game_data[:top_n], 1):
 			percent = tournament_points_fond_distribution[i] / Decimal("100")
@@ -82,12 +80,6 @@ class TournamentService:
 		if len(finish_game_data) >= 15:
 			record = finish_game_data[14]
 			tournament_users[record["Delivery.CustomerCardNumber"]]["points"] += tournament_points_fond_distribution_top_15
-
-		# test_percent = tournament_points_fond_distribution[i] / Decimal("100")
-		# test_points = tournament_points_fond * test_percent
-		# tournament_users['9267227752']["points"] += points
-
-		logger.info(f"tournament_user 2 ['9267227752']: {tournament_users['9267227752']}")
 
 		card_numbers = list(tournament_users.keys())
 		phones = [f"+7{card}" for card in card_numbers]
@@ -101,8 +93,6 @@ class TournamentService:
 
 		logger.info(f"Users [MAP]: {len(users_map)}")
 		logger.info(f"Registrations [MAP]: {len(registrations_map)}")
-
-		logger.info(f"tournament_user 3 ['9267227752']: {tournament_users['9267227752']}")
 
 		to_update = []
 		for card_number, data in tournament_users.items():
@@ -119,7 +109,5 @@ class TournamentService:
 			reg.points = data["points"]
 
 			to_update.append(reg)
-
-		logger.info(f"to_update: {to_update}")
 
 		TournamentRegistration.objects.bulk_update(to_update, ["knockouts", "points"])
