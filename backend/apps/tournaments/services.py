@@ -49,17 +49,17 @@ class TournamentService:
 		result = self.iiko_service.get_olap_report_by_date(tournament.started_at.date())
 		data = sorted(result["data"], key=lambda x: x["DishServicePrintTime"])
 
-		# phones = {i["Delivery.CustomerPhone"] for i in data}
+		# card_numbers = {i["Delivery.CustomerCardNumber"] for i in data}
 
-		events_data = [i for i in data if i.get("DishName", "").lower() in tournament_events and i.get("Delivery.CustomerPhone") is not None]
+		events_data = [i for i in data if i.get("DishName", "").lower() in tournament_events and i.get("Delivery.CustomerCardNumber") is not None]
 		finish_game_data = [i for i in events_data if i.get("DishName", "").lower() == "финишгейм"]
-		tournament_users = {i["Delivery.CustomerPhone"]: {"knockouts": Decimal("0"), "points": Decimal("0")} for i in events_data}
+		tournament_users = {i["Delivery.CustomerCardNumber"]: {"knockouts": Decimal("0"), "points": Decimal("0")} for i in events_data}
 
 		for record in events_data:
 			event = record["DishName"].lower()
 			points = tournament_events.get(event, Decimal("0"))
 
-			tournament_user = tournament_users[record["Delivery.CustomerPhone"]]
+			tournament_user = tournament_users[record["Delivery.CustomerCardNumber"]]
 
 			if points > Decimal("0"):
 				tournament_user["points"] += points
@@ -74,14 +74,15 @@ class TournamentService:
 			percent = tournament_points_fond_distribution[i] / Decimal("100")
 			points = tournament_points_fond * percent
 
-			tournament_users[record["Delivery.CustomerPhone"]]["points"] += points
+			tournament_users[record["Delivery.CustomerCardNumber"]]["points"] += points
 
 		if len(finish_game_data) >= 15:
 			record = finish_game_data[14]
-			tournament_users[record["Delivery.CustomerPhone"]]["points"] += tournament_points_fond_distribution_top_15
+			tournament_users[record["Delivery.CustomerCardNumber"]]["points"] += tournament_points_fond_distribution_top_15
 
 
-		phones = list(tournament_users.keys())
+		card_numbers = list(tournament_users.keys())
+		phones = [f"+7{card}" for card in card_numbers]
 		logger.info(f"count phones: {len(phones)}")
 
 		users = User.objects.filter(phone__in=phones)

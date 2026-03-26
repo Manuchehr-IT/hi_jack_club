@@ -50,8 +50,10 @@ class IikoLocalClient:
 			"reportType": "SALES",
 			"groupByRowFields": [
 				"Delivery.CustomerName",
-				"Delivery.CustomerPhone",
-				"DishId",
+				"OrderNum",
+				# "Delivery.CustomerPhone",
+				"Delivery.CustomerCardNumber",
+				# "DishId",
 				"OpenTime",
 				"CloseTime",
 				"DishName",

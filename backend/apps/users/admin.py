@@ -15,7 +15,7 @@ class UserAdmin(BaseUserAdmin):
     list_display_links = ['avatar_icon', 'id', 'telegram_id']
     list_filter = ['is_superuser', 'created_at']
     list_editable = ['knockouts', 'rating']
-    search_fields = ['id', 'telegram_id', 'nickname', 'username']
+    search_fields = ['id', 'telegram_id', 'nickname', 'username', 'phone']
     ordering = ['-created_at']
     actions = ['export_as_csv']
 
