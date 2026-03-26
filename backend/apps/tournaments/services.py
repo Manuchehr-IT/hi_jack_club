@@ -62,7 +62,7 @@ class TournamentService:
 			points = tournament_events.get(event, Decimal("0")) * count
 
 			if points > Decimal("0") and "энтри" in event:
-				tournament_users[record["Delivery.CustomerCardNumber"]]["points"] += points
+				tournament_points_fond += points
 
 			if "баунти" in event and "баунтиголд" not in event:
 				tournament_users[record["Delivery.CustomerCardNumber"]]["knockouts"] += Decimal("1") * count
