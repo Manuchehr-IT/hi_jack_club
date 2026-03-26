@@ -52,6 +52,7 @@ class TournamentService:
 		# card_numbers = {i["Delivery.CustomerCardNumber"] for i in data}
 
 		events_data = [i for i in data if i.get("DishName", "").lower() in tournament_events and i.get("Delivery.CustomerCardNumber") is not None]
+		logger.info("events_data:", events_data)
 		finish_game_data = [i for i in events_data if i.get("DishName", "").lower() == "финишгейм"]
 		tournament_users = {i["Delivery.CustomerCardNumber"]: {"knockouts": Decimal("0"), "points": Decimal("0")} for i in events_data}
 
