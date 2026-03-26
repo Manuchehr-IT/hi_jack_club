@@ -95,7 +95,8 @@ class TournamentService:
 		logger.info(f"Registrations [MAP]: {len(registrations_map)}")
 
 		to_update = []
-		for phone, data in tournament_users.items():
+		for card_number, data in tournament_users.items():
+			phone = f"+7{card_number}"
 			user = users_map.get(phone)
 			if not user:
 				continue
