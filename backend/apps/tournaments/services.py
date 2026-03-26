@@ -52,13 +52,14 @@ class TournamentService:
 		# card_numbers = {i["Delivery.CustomerCardNumber"] for i in data}
 
 		events_data = [i for i in data if i.get("DishName", "").lower() in tournament_events and i.get("Delivery.CustomerCardNumber") is not None]
-		logger.info("events_data:", events_data)
+		logger.info(f"events_data: {events_data}")
 		finish_game_data = [i for i in events_data if i.get("DishName", "").lower() == "финишгейм"]
 		tournament_users = {i["Delivery.CustomerCardNumber"]: {"knockouts": Decimal("0"), "points": Decimal("0")} for i in events_data}
 
 		for record in events_data:
+			count = int(record["DishAmountInt"])
 			event = record["DishName"].lower()
-			points = tournament_events.get(event, Decimal("0"))
+			points = tournament_events.get(event, Decimal("0")) * count
 
 			tournament_user = tournament_users[record["Delivery.CustomerCardNumber"]]
 
@@ -66,7 +67,7 @@ class TournamentService:
 				tournament_user["points"] += points
 
 			if "баунти" in event and "баунтиголд" not in event:
-				tournament_user["knockouts"] += Decimal("1")
+				tournament_user["knockouts"] += Decimal("1") * count
 
 
 		top_n = len(tournament_points_fond_distribution)
