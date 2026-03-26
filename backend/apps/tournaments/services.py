@@ -61,8 +61,11 @@ class TournamentService:
 			event = record["DishName"].lower()
 			points = tournament_events.get(event, Decimal("0")) * count
 
-			if points > Decimal("0") and "энтри" in event:
-				tournament_points_fond += points
+			if points > Decimal("0"):
+				if "энтри" in event:
+					tournament_points_fond += points
+				else:
+					tournament_users[record["Delivery.CustomerCardNumber"]]["points"] += points
 
 			if "баунти" in event and "баунтиголд" not in event:
 				tournament_users[record["Delivery.CustomerCardNumber"]]["knockouts"] += Decimal("1") * count
