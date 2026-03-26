@@ -245,11 +245,19 @@ class TournamentRegistrationAdmin(admin.ModelAdmin):
     readonly_fields = ['created_at', 'updated_at']
     list_select_related = ['user', 'tournament']
 
-    def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        if db_field.name == "tournament":
-            # Фильтруем только турниры в очереди
-            kwargs["queryset"] = Tournament.objects.filter(status=Tournament.StatusType.IN_QUEUE)
-        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+    # def formfield_for_foreignkey(self, db_field, request, **kwargs):
+    #     if db_field.name == "tournament":
+    #         # Фильтруем только турниры в очереди
+    #         kwargs["queryset"] = Tournament.objects.filter(status=Tournament.StatusType.IN_QUEUE)
+    #     return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+    # def get_readonly_fields(self, request, obj=None):
+    #     readonly = list(self.readonly_fields)
+
+    #     if obj and obj.tournament.status != Tournament.StatusType.IN_QUEUE:
+    #         readonly += ["tournament", "user"]
+
+    #     return readonly
 
     @admin.display(description='Статус')
     def status_badge(self, obj):

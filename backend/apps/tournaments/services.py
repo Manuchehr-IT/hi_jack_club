@@ -69,6 +69,8 @@ class TournamentService:
 			if "баунти" in event and "баунтиголд" not in event:
 				tournament_user["knockouts"] += Decimal("1") * count
 
+		logger.info(f"tournament_user ['9267227752']: {tournament_users['9267227752']}")
+
 		fg_print_data = {data["Delivery.CustomerCardNumber"]: data["DishServicePrintTime"] for data in finish_game_data}
 		logger.info(f"finish_game_data [card_numbers | time]: {fg_print_data}")
 		top_n = len(tournament_points_fond_distribution)
