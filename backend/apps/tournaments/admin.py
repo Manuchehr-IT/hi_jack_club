@@ -239,7 +239,7 @@ class TournamentAdmin(admin.ModelAdmin):
 
 @admin.register(TournamentRegistration)
 class TournamentRegistrationAdmin(admin.ModelAdmin):
-    list_display = ['id', 'tournament', 'tournament_status', 'user_nickname', 'user_username', 'knockouts', 'points', 'status_badge', 'attended', 'created_at_compact']
+    list_display = ['id', 'tournament', 'tournament_status', 'user_nickname', 'user_username', 'user_phone', 'knockouts', 'points', 'status_badge', 'attended', 'created_at_compact']
     list_filter = ['status', 'tournament', 'created_at']
     search_fields = ['user__username', 'user__nickname', 'tournament__title']
     readonly_fields = ['created_at', 'updated_at']
@@ -277,6 +277,10 @@ class TournamentRegistrationAdmin(admin.ModelAdmin):
     @admin.display(ordering="user__username", description="Username")
     def user_username(self, obj):
         return obj.user.username
+
+    @admin.display(ordering="user__phone", description="Phone")
+    def user_phone(self, obj):
+        return obj.user.phone
 
     @admin.display(ordering='created_at', description='Зарегистрирован')
     def created_at_compact(self, obj):
