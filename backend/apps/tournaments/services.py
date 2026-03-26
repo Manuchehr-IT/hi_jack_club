@@ -61,15 +61,13 @@ class TournamentService:
 			event = record["DishName"].lower()
 			points = tournament_events.get(event, Decimal("0")) * count
 
-			tournament_user = tournament_users[record["Delivery.CustomerCardNumber"]]
-
 			if points > Decimal("0"):
-				tournament_user["points"] += points
+				tournament_users[record["Delivery.CustomerCardNumber"]]["points"] += points
 
 			if "баунти" in event and "баунтиголд" not in event:
-				tournament_user["knockouts"] += Decimal("1") * count
+				tournament_users[record["Delivery.CustomerCardNumber"]]["knockouts"] += Decimal("1") * count
 
-		logger.info(f"tournament_user ['9267227752']: {tournament_users['9267227752']}")
+		logger.info(f"tournament_user 1 ['9267227752']: {tournament_users['9267227752']}")
 
 		fg_print_data = {data["Delivery.CustomerCardNumber"]: data["DishServicePrintTime"] for data in finish_game_data}
 		logger.info(f"finish_game_data [card_numbers | time]: {fg_print_data}")
@@ -85,6 +83,11 @@ class TournamentService:
 			record = finish_game_data[14]
 			tournament_users[record["Delivery.CustomerCardNumber"]]["points"] += tournament_points_fond_distribution_top_15
 
+		# test_percent = tournament_points_fond_distribution[i] / Decimal("100")
+		# test_points = tournament_points_fond * test_percent
+		# tournament_users['9267227752']["points"] += points
+
+		logger.info(f"tournament_user 2 ['9267227752']: {tournament_users['9267227752']}")
 
 		card_numbers = list(tournament_users.keys())
 		phones = [f"+7{card}" for card in card_numbers]
@@ -98,6 +101,8 @@ class TournamentService:
 
 		logger.info(f"Users [MAP]: {len(users_map)}")
 		logger.info(f"Registrations [MAP]: {len(registrations_map)}")
+
+		logger.info(f"tournament_user 3 ['9267227752']: {tournament_users['9267227752']}")
 
 		to_update = []
 		for card_number, data in tournament_users.items():
