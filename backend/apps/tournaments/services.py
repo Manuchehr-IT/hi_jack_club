@@ -47,7 +47,7 @@ class TournamentService:
 		tournament_points_fond_distribution_top_15 = Decimal("50")
 
 		result = self.iiko_service.get_olap_report_by_date(tournament.started_at.date())
-		data = sorted(result["data"], key=lambda x: x["DishServicePrintTime"])
+		data = sorted(result["data"], key=lambda x: x["DishServicePrintTime"], reverse=True)
 
 		# card_numbers = {i["Delivery.CustomerCardNumber"] for i in data}
 
