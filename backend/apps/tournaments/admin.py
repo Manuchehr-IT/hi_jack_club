@@ -1,12 +1,23 @@
+import csv
+from decimal import Decimal
 from django import forms
 from django.contrib import admin, messages
+from django.contrib.auth.models import User, Group
+from django.core.exceptions import ValidationError
+from django.http import HttpResponse
 from django.shortcuts import redirect
 from django.urls import path
 from django.utils.html import format_html
-from django.utils import timezone
+from django.utils.timezone import localtime
 
 from .factory import create_tournament_service
-from .models import Tournament, TournamentFeature, TournamentRegistration
+from .models import Tournament, TournamentConfig, TournamentRewardDistributionTemplate, TournamentRewardDistribution, TournamentEventLog, TournamentFeature, TournamentRegistration
+
+for model in [User, Group]:
+    try:
+        admin.site.unregister(model)
+    except admin.sites.NotRegistered:
+        pass
 
 class TournamentFeatureForm(forms.ModelForm):
     class Meta:
@@ -18,7 +29,7 @@ class TournamentFeatureForm(forms.ModelForm):
                 'placeholder': 'Введите особенность (макс. 256 символов)'
             })
         }
-    
+
     def clean_text(self):
         text = self.cleaned_data.get('text', '').strip()
         if len(text) > 256:
@@ -31,80 +42,140 @@ class TournamentFeatureInline(admin.TabularInline):
     model = TournamentFeature
     form = TournamentFeatureForm
     extra = 1  # Количество пустых строк по умолчанию
-    ordering = ('sort_order',)
+    ordering = ['sort_order']
 
-    # Настройки внешнего вида
-    # classes = ('collapse',)  # Можно свернуть
-    min_num = 0  # Минимальное количество особенностей
-    # max_num = 10  # Максимальное количество особенностей
+    classes = ['collapse']
+    min_num = 0
 
     # Кастомизация отображения
     def get_queryset(self, request):
         return super().get_queryset(request).order_by('sort_order')
 
 
+class TournamentConfigInline(admin.StackedInline):  # или TabularInline
+    model = TournamentConfig
+    extra = 0
+
+    classes = ['collapse']
+    min_num = 1
+    max_num = 1
+    can_delete = False
+
+    class Media:
+        css = {
+            'all': ['admin/css/hide-inline-header.css']
+        }
+
+
+class TournamentEventLogInline(admin.TabularInline):
+    model = TournamentEventLog
+    extra = 0
+
+    classes = ['collapse']
+    verbose_name = "Событие"
+    verbose_name_plural = "События"
+
+    fields = ['user', 'event', 'count', 'multiplier', 'recorded_at']
+
+    class Media:
+        css = {
+            'all': ['admin/css/hide-inline-original.css']
+        }
+
+class TournamentRewardDistributionFormSet(forms.BaseInlineFormSet):
+    def clean(self):
+        super().clean()
+        total = Decimal("0")
+
+        for form in self.forms:
+            if form.cleaned_data and not form.cleaned_data.get('DELETE', False):
+                percent = form.cleaned_data.get('percent', Decimal("0"))
+                total += percent
+
+        if total != 100:
+            raise ValidationError(f'Сумма процентов должна быть 100%, сейчас: {total}%')
+
+class TournamentRewardDistributionInline(admin.TabularInline):
+    model = TournamentRewardDistribution
+    formset = TournamentRewardDistributionFormSet
+    extra = 0
+    min_num = 1
+
+    class Media:
+        css = {
+            'all': ['admin/css/hide-inline-original.css']
+        }
+
+    # def save_model(self, request, obj, form, change):
+    #     # Сохраняем template первым, если его еще нет в БД
+    #     if obj.template and not obj.template.pk:
+    #         obj.template.save()
+    #     super().save_model(request, obj, form, change)
+
+@admin.register(TournamentRewardDistributionTemplate)
+class TournamentRewardDistributionTemplateAdmin(admin.ModelAdmin):
+    inlines = [TournamentRewardDistributionInline]
+
+    list_display = ['id', 'title', 'created_at', 'updated_at']
+    search_fields = ['title']
+    ordering = ['-created_at']
+
+
 @admin.register(Tournament)
 class TournamentAdmin(admin.ModelAdmin):
-    inlines = [TournamentFeatureInline]
+    inlines = [TournamentFeatureInline, TournamentConfigInline, TournamentEventLogInline]
 
     list_display = ['id', 'title', 'location', 'started_at_compact', 'status_badge', 'participants_count', 'tournament_action_button']
     list_display_links = ['id', 'title']
     list_filter = ['status']
     search_fields = ['title', 'location']
     ordering = ['-started_at']
-    actions = ['update_rating']
-
-    class Media:
-        css = {
-            'all': ('admin/tournament.css',)
-        }
+    actions = ['update_event_logs']
 
     def get_fieldsets(self, request, obj=None):
-        """Динамические fieldsets в зависимости от создания/редактирования"""
+        fields = [
+            ["Основная информация", {
+                "fields": ["title", "location", "started_at", "general_rules", "max_participants", "max_waitlist", "icon"]
+            }],
+            ["Награды", {
+                "fields": ["bank_points", "reward_distribution_template"]
+            }],
+        ]
+
         if obj:  # Редактирование существующего турнира
-            return (
-                ('Основная информация', {
-                    'fields': ('title', 'location', 'started_at', 'general_rules', 'max_participants', 'max_waitlist', 'icon')
-                }),
-                ('Статус', {
-                    'fields': ('status_display',)
-                }),
-                ('Даты', {
-                    'fields': ('created_at', 'updated_at')
-                }),
-                ('Участники', {
-                    'fields': ('participants_count_display',)
-                }),
-            )
-        return (
-            ('Основная информация', {
-                'fields': ('title', 'location', 'started_at', 'general_rules', 'max_participants', 'max_waitlist', 'icon')
-            }),
-        )
+            fields.extend([
+                ["Статус", {
+                    "fields": ["status_display"]
+                }],
+                ["Даты", {
+                    "fields": ["created_at", "updated_at"]
+                }],
+                ["Участники", {
+                    "fields": ["participants_count_display"]
+                }],
+            ])
 
-    @admin.action(description="Обновить рейтинг пользователей турнира из OLAP отчёта")
-    def update_rating(self, request, queryset):
-        tournament_service = create_tournament_service()
+        return fields
+
+    @admin.action(description="Пересчитать журнал событий турнира для рейтинга")
+    def recalc_event_logs(self, request, queryset):
         count = 0
-
         for tournament in queryset:
-            tournament_service.process_olap_report(tournament.id)
+            tournament.recalc_all_registrations()
             count += 1
 
-        self.message_user(request, f"Обновлено {count} турниров")
+        self.message_user(request, f"Пересчитаны рейтинги пользователей в турнирах: {count}")
 
-    # def icon_preview(self, obj):
-    #     if obj.icon:
-    #         return format_html(
-    #             '''
-    #             <div style="display: flex; align-items: center; gap: 15px;">
-    #                 <img src="{}" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid #e0e0e0;" />
-    #             </div>
-    #             ''',
-    #             obj.icon.url
-    #         )
-    #     return format_html('<span style="color: #999;">— Нет фото —</span>')
-    # icon_preview.short_description = "Иконка турнира"
+    # @admin.action(description="Обновить журнал событий турнира из OLAP отчёта")
+    # def update_event_logs(self, request, queryset):
+    #     tournament_service = create_tournament_service()
+    #     count = 0
+
+    #     for tournament in queryset:
+    #         tournament_service.process_olap_report(tournament.id)
+    #         count += 1
+
+    #     self.message_user(request, f"Обновлено {count} турниров")
 
     def participants_count(self, obj):
         return obj.get_participants_count()
@@ -136,8 +207,7 @@ class TournamentAdmin(admin.ModelAdmin):
 
     # Компактное отображение даты старта
     def started_at_compact(self, obj):
-        # return obj.started_at.strftime('%d.%m.%Y %H:%M')
-        return timezone.localtime(obj.started_at).strftime('%d.%m.%Y %H:%M')
+        return localtime(obj.started_at).strftime('%d.%m.%Y %H:%M')
     started_at_compact.short_description = 'Старт'
     started_at_compact.admin_order_field = 'started_at'
 
@@ -204,7 +274,7 @@ class TournamentAdmin(admin.ModelAdmin):
             )
         except Tournament.DoesNotExist:
             self.message_user(request, 'Турнир не найден', messages.ERROR)
-        
+
         return redirect('admin:tournaments_tournament_changelist')
 
     def finish_tournament(self, request, tournament_id):
@@ -220,7 +290,7 @@ class TournamentAdmin(admin.ModelAdmin):
             )
         except Tournament.DoesNotExist:
             self.message_user(request, 'Турнир не найден', messages.ERROR)
-        
+
         return redirect('admin:tournaments_tournament_changelist')
 
     # Показываем предупреждение при редактировании завершенного турнира
@@ -233,31 +303,49 @@ class TournamentAdmin(admin.ModelAdmin):
                     extra_context['readonly_message'] = 'Этот турнир завершен и не может быть изменен.'
             except Tournament.DoesNotExist:
                 pass
-        
+
         return super().changeform_view(request, object_id, form_url, extra_context)
 
 
 @admin.register(TournamentRegistration)
 class TournamentRegistrationAdmin(admin.ModelAdmin):
-    list_display = ['id', 'tournament', 'tournament_status', 'user_nickname', 'user_username', 'user_phone', 'knockouts', 'points', 'status_badge', 'attended', 'created_at_compact']
+    list_display = ['id', 'tournament', 'tournament_status', 'user_nickname', 'user_username', 'user_phone', 'knockouts', 'points', 'status_badge', 'created_at_compact']
+    exclude = ["attended", "table_number"]
     list_filter = ['status', 'tournament', 'created_at']
-    search_fields = ['user__username', 'user__nickname', 'tournament__title']
-    readonly_fields = ['created_at', 'updated_at']
+    search_fields = ['user__username', 'user__nickname', 'user__phone', 'tournament__title']
+    readonly_fields = ["rankings_calculated", "knockouts", "points", 'created_at', 'updated_at']
+    # readonly_fields = ['created_at', 'updated_at']
     list_select_related = ['user', 'tournament']
+    actions = ["export_as_csv"]
 
-    # def formfield_for_foreignkey(self, db_field, request, **kwargs):
-    #     if db_field.name == "tournament":
-    #         # Фильтруем только турниры в очереди
-    #         kwargs["queryset"] = Tournament.objects.filter(status=Tournament.StatusType.IN_QUEUE)
-    #     return super().formfield_for_foreignkey(db_field, request, **kwargs)
+    @admin.action(description="Экспорт выбранных регистраций в CSV")
+    def export_as_csv(self, request, queryset):
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename=users.csv'
 
-    # def get_readonly_fields(self, request, obj=None):
-    #     readonly = list(self.readonly_fields)
+        writer = csv.writer(response)
+        writer.writerow([
+            'ID', "Tournament Title", "Tournament Status", 'Tournament Started At', 'First name', 'Username', 'Nickname', 'Phone', 'Knockouts', 'Points', 'Created at'
+        ])
 
-    #     if obj and obj.tournament.status != Tournament.StatusType.IN_QUEUE:
-    #         readonly += ["tournament", "user"]
+        # Данные
+        for registration in queryset:
+            writer.writerow([
+                registration.user.id,
+                registration.tournament.title,
+                registration.tournament.status,
+                localtime(registration.tournament.started_at).strftime("%d.%m.%Y %H:%M"),
+                registration.user.first_name,
+                registration.user.username,
+                registration.user.nickname,
+                registration.user.phone,
+                registration.knockouts,
+                registration.points,
+                localtime(registration.created_at).strftime("%d.%m.%Y %H:%M")
+            ])
 
-    #     return readonly
+        return response
+
 
     @admin.display(description='Статус')
     def status_badge(self, obj):
@@ -278,13 +366,13 @@ class TournamentRegistrationAdmin(admin.ModelAdmin):
     def tournament_status(self, obj):
         return obj.tournament.status
 
-    @admin.display(ordering="user__nickname", description="Nickname")
-    def user_nickname(self, obj):
-        return obj.user.nickname
-
     @admin.display(ordering="user__username", description="Username")
     def user_username(self, obj):
         return obj.user.username
+
+    @admin.display(ordering="user__nickname", description="Nickname")
+    def user_nickname(self, obj):
+        return obj.user.nickname
 
     @admin.display(ordering="user__phone", description="Phone")
     def user_phone(self, obj):
@@ -292,5 +380,54 @@ class TournamentRegistrationAdmin(admin.ModelAdmin):
 
     @admin.display(ordering='created_at', description='Зарегистрирован')
     def created_at_compact(self, obj):
-        # return obj.created_at.strftime('%d.%m.%Y %H:%M')
-        return timezone.localtime(obj.created_at).strftime('%d.%m.%Y %H:%M')
+        return localtime(obj.created_at).strftime('%d.%m.%Y %H:%M')
+
+
+@admin.register(TournamentEventLog)
+class TournamentEventLogAdmin(admin.ModelAdmin):
+    list_display = ['id', 'tournament', 'user_nickname', 'user_phone', 'event', 'count', 'multiplier', 'display_points', 'recorded_at']
+    list_filter = ['user', 'tournament', 'event', 'recorded_at']
+    search_fields = ['user__username', 'user__nickname', 'user__phone', 'tournament__title']
+    readonly_fields = ['created_at', 'updated_at']
+    list_select_related = ['user', 'tournament']
+
+    def get_fieldsets(self, request, obj=None):
+        fields = [
+            ['Основная информация', {
+                'fields': ['tournament', 'user', 'event', 'count', 'multiplier', 'display_points', 'recorded_at']
+            }],
+        ]
+
+        if obj:
+            fields.append(
+                ['Даты', {
+                    'fields': ['created_at', 'updated_at']
+                }]
+            )
+
+        return fields
+
+    @admin.display(ordering="user__username", description="Username")
+    def user_username(self, obj):
+        return obj.user.username
+
+    @admin.display(ordering="user__nickname", description="Nickname")
+    def user_nickname(self, obj):
+        return obj.user.nickname
+
+    @admin.display(ordering="user__phone", description="Phone")
+    def user_phone(self, obj):
+        return obj.user.phone
+
+    @admin.display(description="Очки")  # ordering не будет работать для property
+    def display_points(self, obj):
+        return obj.points
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False

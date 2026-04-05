@@ -5,6 +5,7 @@ djangorestframework
 djangorestframework-simplejwt
 django-ckeditor-5
 django-cors-headers
+django-model-utils==5.0.0
 drf-spectacular
 httpx
 qrcode

@@ -1,15 +1,22 @@
-# tournament/signals.py
 import logging
 from datetime import timedelta
-from django.db.models.signals import post_save
+from django.db import transaction
+from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 from django.utils import timezone
 
 from .factory import create_tournament_service
-from .models import Tournament
+from .models import Tournament, TournamentEventLog
 from celery_app.tasks.tournament import tournament_lifecycle_task
 
 logger = logging.getLogger(__name__)
+
+@receiver([post_save, post_delete], sender=TournamentEventLog)
+def on_event_change(sender, instance, **kwargs):
+	"""При изменении событий"""
+	logger.info(f"TournamentEventLog on_event_change: {instance}, TournamentEventLog.user: {instance.user}")
+	transaction.on_commit(lambda: instance.user.tournament_registrations.filter(tournament=instance.tournament).first().recalc_stats())
+
 
 @receiver(post_save, sender=Tournament)
 def schedule_tournament_lifecycle(sender, instance: Tournament, created, **kwargs):

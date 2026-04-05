@@ -1,6 +1,10 @@
+from typing import List, Self
 import uuid
-from django.db import models
+from decimal import Decimal
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
+from django.core.exceptions import ValidationError
+from django.core.validators import MinValueValidator
+from django.db import models
 
 class UserManager(BaseUserManager):
 	def create_user(self, telegram_id: int, first_name: str, password: str | None = None, **extra_fields):
@@ -59,8 +63,8 @@ class User(AbstractBaseUser, PermissionsMixin):
 	referral_code = models.UUIDField(default=uuid.uuid4, unique=True, editable=False, verbose_name="Реферальный код")
 
 	# Игровая статистика
-	knockouts = models.IntegerField(default=0, verbose_name="Нокауты")
-	rating = models.IntegerField(default=0, verbose_name="Рейтинг")
+	knockouts = models.IntegerField(default=0, validators=[MinValueValidator(0)], verbose_name="Нокауты")
+	points = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal("0.00"), verbose_name="Очки рейтинга")
 
 	# iiko:
 	iiko_id = models.UUIDField(unique=True, blank=True, null=True, verbose_name="Iiko ID")
@@ -89,4 +93,59 @@ class User(AbstractBaseUser, PermissionsMixin):
 		ordering = ["-created_at"]
 
 	def __str__(self):
+		info = []
+		if self.nickname:
+			info.append(f"{self.nickname}")
+		if self.phone:
+			info.append(f"{self.phone}")
+		if self.username:
+			info.append(f"@{self.username}")
+
+		if info:
+			return " | ".join(info)
+
 		return f"{self.first_name} (ID: {self.id})"
+
+class UserRewardLog(models.Model):
+	class OperationType(models.TextChoices):
+		CREDITING = "CREDITING", "Зачисление"
+		DEDUCTING = "DEDUCTING", "Списание"
+
+	class RewardType(models.TextChoices):
+		KNOCKOUTS = "KNOCKOUTS", "Knockouts"
+		POINTS = "POINTS", "Points"
+
+	user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="rewards", verbose_name="Пользователь")
+	operation = models.CharField(max_length=50, choices=OperationType.choices, verbose_name="Тип операции")
+	reward = models.CharField(max_length=50, choices=RewardType.choices, verbose_name="Тип награды")
+	count = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(Decimal("0"))], verbose_name="Кол-во")
+	comment = models.CharField(max_length=256, blank=True, null=True, verbose_name="Комментарий")
+
+	created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
+	updated_at = models.DateTimeField(auto_now=True, verbose_name="Дата обновления")
+
+	class Meta:
+		verbose_name = "Журнал наград пользователя"
+		verbose_name_plural = "Журналы наград пользователей"
+
+	def get_rewards(self, tournament, reward) -> List[Self]:
+		return UserRewardLog.objects.filter(tournament=tournament, reward=reward).order_by("-created_at")
+
+	def clean(self):
+		if self.count == 0:
+			raise ValidationError("Количество наград не может быть 0")
+
+	def save(self, *args, **kwargs):
+		self.full_clean()
+		self._update_user_reward()
+		super().save(*args, **kwargs)
+
+	def _update_user_reward(self):
+		if self.reward == self.RewardType.KNOCKOUTS:
+			self.user.knockouts = self.user.knockouts + self.count if self.operation == self.OperationType.CREDITING else self.user.knockouts - self.count
+
+		elif self.reward == self.RewardType.POINTS:
+			self.user.points = self.user.points + self.count if self.operation == self.OperationType.CREDITING else self.user.points - self.count
+
+		self.user.save()
+

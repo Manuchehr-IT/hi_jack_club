@@ -7,14 +7,16 @@ from django.http import HttpResponse
 from django.utils.html import format_html
 from django.utils.timezone import localtime
 
+from .models import UserRewardLog
+
 User = get_user_model()
 
 @admin.register(User)
 class UserAdmin(BaseUserAdmin):
-    list_display = ['avatar_icon', 'id', 'telegram_id', 'referrer', 'nickname', 'username', 'phone', 'knockouts', 'rating', 'formatted_created_at']
+    list_display = ['avatar_icon', 'id', 'telegram_id', 'referrer', 'nickname', 'username', 'phone', 'knockouts', 'points', 'formatted_created_at']
     list_display_links = ['avatar_icon', 'id', 'telegram_id']
     list_filter = ['is_superuser', 'created_at']
-    list_editable = ['knockouts', 'rating']
+    list_editable = ['knockouts', 'points']
     search_fields = ['id', 'telegram_id', 'nickname', 'username', 'phone']
     ordering = ['-created_at']
     actions = ['export_as_csv']
@@ -22,11 +24,11 @@ class UserAdmin(BaseUserAdmin):
     fieldsets = (
         ('Идентификатор', {'fields': ('id', 'telegram_id')}),
         ('Персональная информация', {'fields': ('referrer', 'username', 'nickname', 'phone', 'avatar_preview')}),
-        ('Игровая статистика', {'fields': ('knockouts', 'rating')}),
-        ('Важные даты', {'fields': ('last_login', 'created_at', 'updated_at')}),
+        ('Игровая статистика', {'fields': ('knockouts', 'points')}),
+        ('Важные даты', {'fields': ('created_at', 'updated_at')}),
     )
 
-    readonly_fields = ['id', 'telegram_id', 'referrer', 'created_at', 'updated_at', 'last_login', 'avatar_preview']
+    readonly_fields = ['id', 'telegram_id', 'username', 'nickname', 'phone', 'referrer', 'created_at', 'updated_at', 'avatar_preview']
 
     def export_as_csv(self, request, queryset):
         response = HttpResponse(content_type='text/csv')
@@ -34,7 +36,7 @@ class UserAdmin(BaseUserAdmin):
 
         writer = csv.writer(response)
         # Заголовки
-        writer.writerow(['ID', "Telegram ID", "Referrer ID", 'Nickname', 'Username', 'First name', 'Phone', 'Knockouts', 'Rating', 'Created At'])
+        writer.writerow(['ID', "Telegram ID", "Referrer ID", 'Nickname', 'Username', 'First name', 'Phone', 'Knockouts', 'Points', 'Created At'])
 
         # Данные
         for user in queryset:
@@ -47,8 +49,8 @@ class UserAdmin(BaseUserAdmin):
                 user.first_name,
                 user.phone,
                 user.knockouts,
-                user.rating,
-                user.created_at.strftime("%d.%m.%Y %H:%M")
+                user.points,
+                localtime(user.created_at).strftime("%d.%m.%Y %H:%M")
             ])
 
         return response
@@ -60,6 +62,7 @@ class UserAdmin(BaseUserAdmin):
     formatted_created_at.short_description = "Created at"
     formatted_created_at.admin_order_field = "created_at"
 
+    @admin.display(description="")
     def avatar_icon(self, obj):
         if obj.avatar_path:
             return format_html(
@@ -70,6 +73,7 @@ class UserAdmin(BaseUserAdmin):
             '<div style="width: 24px; height: 24px; border-radius: 50%; background: #f5f5f5; display: flex; align-items: center; justify-content: center; font-size: 12px;" title="Нет фото">👤</div>'
         )
 
+    @admin.display(description="Фото профиля")
     def avatar_preview(self, obj):
         if obj.avatar_path:
             return format_html(
@@ -82,8 +86,24 @@ class UserAdmin(BaseUserAdmin):
             )
         return format_html('<span style="color: #999;">— Нет фото —</span>')
 
-    avatar_icon.short_description = ""
-    avatar_preview.short_description = "Фото профиля"
-
     def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+@admin.register(UserRewardLog)
+class UserRewardLogAdmin(admin.ModelAdmin):
+    list_display = ['id', 'user', 'operation', 'reward', 'count', 'comment', 'created_at']
+    list_filter = ['user', 'operation', 'reward', 'created_at']
+    search_fields = ['user', 'comment']
+    ordering = ['-created_at']
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
         return False

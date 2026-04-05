@@ -1,6 +1,7 @@
-from django_ckeditor_5.fields import CKEditor5Field
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.html import format_html
+from django_ckeditor_5.fields import CKEditor5Field
 
 class AboutClub(models.Model):
 	sort_order = models.PositiveIntegerField(default=0, blank=False, null=False, verbose_name="Порядок сортировки")
