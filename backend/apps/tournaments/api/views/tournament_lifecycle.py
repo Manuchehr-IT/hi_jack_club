@@ -126,8 +126,7 @@ def finish_internal(request, pk):
 	try:
 		with transaction.atomic():
 			tournament = Tournament.objects.select_for_update().get(id=pk)
-			# expires_at = tournament.started_at + timedelta(hours=9)
-			expires_at = tournament.started_at + timedelta(minutes=2)
+			expires_at = tournament.started_at + timedelta(hours=9)
 			current_time = timezone.now()
 
 			if tournament.status != Tournament.StatusType.ACTIVE:

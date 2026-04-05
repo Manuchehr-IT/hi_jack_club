@@ -20,8 +20,7 @@ def on_event_change(sender, instance, **kwargs):
 
 @receiver(post_save, sender=Tournament)
 def schedule_tournament_lifecycle(sender, instance: Tournament, created, **kwargs):
-	# expires_at = instance.started_at + timedelta(hours=9)
-	expires_at = instance.started_at + timedelta(minutes=2)
+	expires_at = instance.started_at + timedelta(hours=9)
 	logger.info(f"SCHEDULE_TOURNAMENT_LIFECYCLE [expires_at]: {expires_at}")
 
 	if instance.status == Tournament.StatusType.IN_QUEUE:
