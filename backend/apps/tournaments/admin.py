@@ -130,7 +130,7 @@ class TournamentAdmin(admin.ModelAdmin):
     list_filter = ['status']
     search_fields = ['title', 'location']
     ordering = ['-started_at']
-    actions = ['update_event_logs']
+    actions = ['update_event_logs', 'recalc_event_logs']
 
     def get_fieldsets(self, request, obj=None):
         fields = [
