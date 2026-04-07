@@ -129,9 +129,6 @@ class Tournament(models.Model):
 		changed = self.tracker.changed()
 		super().save(*args, **kwargs)
 
-		if not TournamentConfig.objects.filter(tournament=self).exists():
-			TournamentConfig.objects.get_or_create(tournament=self)
-
 		if changed:
 			logger.info(f"Tournament tracker.changed: {changed}")
 			transaction.on_commit(lambda: self.recalc_all_registrations())

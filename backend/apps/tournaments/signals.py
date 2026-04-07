@@ -6,7 +6,7 @@ from django.dispatch import receiver
 from django.utils import timezone
 
 from .factory import create_tournament_service
-from .models import Tournament, TournamentEventLog
+from .models import Tournament, TournamentConfig, TournamentEventLog
 from celery_app.tasks.tournament import tournament_lifecycle_task
 
 logger = logging.getLogger(__name__)
@@ -17,6 +17,13 @@ def on_event_change(sender, instance, **kwargs):
 	logger.info(f"TournamentEventLog on_event_change: {instance}, TournamentEventLog.user: {instance.user}")
 	transaction.on_commit(lambda: instance.user.tournament_registrations.filter(tournament=instance.tournament).first().recalc_stats())
 
+@receiver(post_save, sender=Tournament)
+def create_tournament_config(sender, instance, created, **kwargs):
+	"""Создает конфиг только если его нет и транзакция завершена"""
+	if created:
+		transaction.on_commit(
+			lambda: TournamentConfig.objects.get_or_create(tournament=instance)
+		)
 
 @receiver(post_save, sender=Tournament)
 def schedule_tournament_lifecycle(sender, instance: Tournament, created, **kwargs):
