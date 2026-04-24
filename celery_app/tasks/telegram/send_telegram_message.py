@@ -6,6 +6,7 @@ from typing import List
 
 from .schemas import SendMethod
 from celery_app import app
+from celery_app.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +30,7 @@ def send_telegram(self, telegram_bot_token: str, method: SendMethod, chat_id: in
 		url = f"https://api.telegram.org/bot{telegram_bot_token}/{method}"
 		payload = {"chat_id": chat_id, "parse_mode": "HTML", **kwargs}
 
-		response = httpx.post(url, json=payload, timeout=10)
+		response = httpx.post(url, json=payload, timeout=10, proxy=settings.proxy)
 		response.raise_for_status()
 		result = response.json()
 

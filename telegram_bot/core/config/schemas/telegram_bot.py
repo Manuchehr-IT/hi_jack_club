@@ -4,7 +4,6 @@ from typing import List
 class TelegramBotSettings(BaseSettings):
 	token: str
 	admin_ids: str
-	proxy: str
 
 	@property
 	def admin_ids_list(self) -> List[int]:

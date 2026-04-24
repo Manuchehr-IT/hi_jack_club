@@ -17,8 +17,7 @@ from infrastructure.redis import redis
 from middlewares import register_middlewares
 
 async def create_app() -> FastAPI:
-	proxy_url = f"http://{settings.telegram_bot.proxy}"
-	session = AiohttpSession(proxy=proxy_url)
+	session = AiohttpSession(proxy=settings.proxy)
 
 	storage = RedisStorage(redis)
 	dp = Dispatcher(storage=storage)
