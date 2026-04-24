@@ -8,6 +8,7 @@ from .schemas import AppSettings, CelerySettings
 class Settings(BaseSettings):
 	environment: Literal["development", "staging", "production"]
 	secret_key: str
+	proxy: str
 
 	app: AppSettings = AppSettings()
 	celery: CelerySettings = CelerySettings()
