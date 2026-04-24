@@ -1,9 +1,9 @@
 import asyncio
 import uvicorn
 import logging
-
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
+from aiogram.client.session.aiohttp import AiohttpSession
 from aiogram.fsm.storage.redis import RedisStorage
 from aiogram.types import Update
 from contextlib import asynccontextmanager
@@ -17,9 +17,12 @@ from infrastructure.redis import redis
 from middlewares import register_middlewares
 
 async def create_app() -> FastAPI:
+	proxy_url = f"http://{settings.telegram_bot.proxy}"
+	session = AiohttpSession(proxy=proxy_url)
+
 	storage = RedisStorage(redis)
 	dp = Dispatcher(storage=storage)
-	bot = Bot(token=settings.telegram_bot.token, default=DefaultBotProperties(parse_mode="HTML"))
+	bot = Bot(token=settings.telegram_bot.token, default=DefaultBotProperties(parse_mode="HTML"), session=session)
 
 	container.bot = bot
 
