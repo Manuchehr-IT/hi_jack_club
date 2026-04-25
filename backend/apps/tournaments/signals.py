@@ -14,8 +14,35 @@ logger = logging.getLogger(__name__)
 @receiver([post_save, post_delete], sender=TournamentEventLog)
 def on_event_change(sender, instance, **kwargs):
 	"""При изменении событий"""
-	logger.info(f"TournamentEventLog on_event_change: {instance}, TournamentEventLog.user: {instance.user}")
-	transaction.on_commit(lambda: instance.user.tournament_registrations.filter(tournament=instance.tournament).first().recalc_stats())
+	entry_all = {
+		TournamentEventLog.EventType.ENTRY,
+		TournamentEventLog.EventType.FREE_ENTRY,
+		TournamentEventLog.EventType.FREE_ENTRY_DEP,
+	}
+
+	if instance.user:
+		event_logs = TournamentEventLog.objects.filter(tournament=instance.tournament, user=instance.user)
+	else:
+		event_logs = TournamentEventLog.objects.filter(tournament=instance.tournament, comment=instance.comment)
+
+	if not event_logs.exists():
+		return
+
+	event_types = set(event_logs.values_list("event", flat=True))
+	# event_types = {i.event for i in event_logs}
+
+	is_valid = (
+		bool(entry_all & event_types)
+		and TournamentEventLog.EventType.ELIMINATION in event_types
+	)
+
+	event_logs.update(is_valid=is_valid)
+	# TournamentEventLog.objects.bulk_update(event_logs, is_valid=is_valid)
+
+	if instance.user:
+		logger.info(f"TournamentEventLog on_event_change: {instance}, TournamentEventLog.user: {instance.user}")
+		transaction.on_commit(lambda: instance.user.tournament_registrations.filter(tournament=instance.tournament).first().recalc_stats())
+
 
 @receiver(post_save, sender=Tournament)
 def create_tournament_config(sender, instance, created, **kwargs):

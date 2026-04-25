@@ -7,7 +7,7 @@ from django.db import models
 from django.db import transaction
 from django.utils import timezone
 from model_utils import FieldTracker
-from typing import List, Self, Tuple
+from typing import Tuple
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
@@ -259,10 +259,13 @@ class TournamentRegistration(models.Model):
 	def recalc_stats(self):
 		"""Пересчитывает knockouts и points для данной регистрации"""
 		events = TournamentEventLog.objects.filter(tournament=self.tournament, user=self.user)
+		if not events:
+			return
 
-		# Суммируем нокауты (BOUNTY событий)
+		colors = [i for i in TournamentEventLog.bounty_colors() if i != TournamentEventLog.EventType.BOUNTY_GOLD]
+		# Суммируем нокауты (BOUNTY событий, кроме голда)
 		knockouts = events.filter(
-			event__in=TournamentEventLog.bounty_colors()
+			event__in=colors
 		).aggregate(
 			total=models.Sum('count')
 		)['total'] or Decimal("0")
@@ -319,7 +322,7 @@ class TournamentConfig(models.Model):
 	def points_map(self) -> dict:
 		"""Словарь всех очков для событий"""
 		return {
-			"ENTRY": self.entry_point, "RE_ENTRY": self.entry_point, "FREE_ENTRY": self.entry_point, "FREE_RE_ENTRY": self.entry_point,
+			"ENTRY": self.entry_point, "RE_ENTRY": self.entry_point, "FREE_ENTRY": self.entry_point, "FREE_RE_ENTRY": self.entry_point, "FREE_ENTRY_DEP": self.entry_point,
 			"ADD_ON": self.add_on_point,
 			"BOUNTY_GREEN": self.bounty_green_point,
 			"BOUNTY_BLUE": self.bounty_blue_point,
@@ -346,6 +349,7 @@ class TournamentEventLog(models.Model):
 		RE_ENTRY = "RE_ENTRY", "Re-entry"
 		FREE_ENTRY = "FREE_ENTRY", "Free Entry"
 		FREE_RE_ENTRY = "FREE_RE_ENTRY", "Free Re-entry"
+		FREE_ENTRY_DEP = "FREE_ENTRY_DEP", "Free Entry Dep"
 		ADD_ON = "ADD_ON", "Add-on"
 
 		BOUNTY_GREEN = "BOUNTY_GREEN", "BountyGreen"
@@ -356,11 +360,13 @@ class TournamentEventLog(models.Model):
 		ELIMINATION = "ELIMINATION", "Elimination"
 
 	tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE, related_name="events", verbose_name="Турнир")
-	user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="tournament_events", verbose_name="Пользователь")
+	user = models.ForeignKey(User, on_delete=models.SET_NULL, related_name="tournament_events", blank=True, null=True, verbose_name="Пользователь")
 	event = models.CharField(max_length=50, choices=EventType.choices, verbose_name="Событие")
 	count = models.IntegerField(validators=[MinValueValidator(0)], default=1, verbose_name="Кол-во")
 	multiplier = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(Decimal("0"))], default=Decimal("1.00"), verbose_name="Множитель очков")
 	recorded_at = models.DateTimeField(verbose_name="Дата записи")
+	comment = models.CharField(max_length=256, blank=True, null=True, verbose_name="Комментарий")
+	is_valid = models.BooleanField(default=True, verbose_name="Валидный для расчета")
 
 	created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
 	updated_at = models.DateTimeField(auto_now=True, verbose_name="Дата обновления")
@@ -376,8 +382,11 @@ class TournamentEventLog(models.Model):
 	@property
 	def points(self) -> Decimal:
 		"""Вычисляет очки события на основе конфигурации турнира"""
+		# if self.is_valid is False:
+		# 	return Decimal("0.00")
+
 		if self.event == self.EventType.ELIMINATION:
-			elimination_events = list(TournamentEventLog.objects.filter(tournament=self.tournament, event=self.EventType.ELIMINATION).order_by("recorded_at"))
+			elimination_events = list(TournamentEventLog.objects.filter(tournament=self.tournament, event=self.EventType.ELIMINATION).order_by("-recorded_at"))
 
 			try:
 				position = elimination_events.index(self) + 1
@@ -399,9 +408,10 @@ class TournamentEventLog(models.Model):
 					self.EventType.RE_ENTRY,
 					self.EventType.FREE_ENTRY,
 					self.EventType.FREE_RE_ENTRY,
+					self.EventType.FREE_ENTRY_DEP,
 					self.EventType.ADD_ON
 				]
-			).count()
+			).aggregate(total=models.Sum('count'))['total'] or 0
 
 			total_bank_points = self.tournament.bank_points + (entry_events_count * self.tournament.config.entry_point)
 			result = total_bank_points * (reward_distribution.percent / 100) + reward_distribution.bonus_points

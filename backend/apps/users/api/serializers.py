@@ -9,8 +9,8 @@ from apps.users.models import User
 class UserSerializer(serializers.ModelSerializer):
 	class Meta:
 		model = User
-		fields = ["id", "telegram_id", "username", "avatar_path", "nickname", "phone", "referral_code", "referrals", "knockouts", "rating", "privacy_policy_accepted", "iiko_qr_code"]
-		read_only_fields = ["referral_code", "referrals", "knockouts", "rating", "privacy_policy_accepted", "created_at", "updated_at"]
+		fields = ["id", "telegram_id", "username", "avatar_path", "nickname", "phone", "referral_code", "referrals", "knockouts", "points", "privacy_policy_accepted", "iiko_qr_code"]
+		read_only_fields = ["referral_code", "referrals", "knockouts", "points", "privacy_policy_accepted", "created_at", "updated_at"]
 
 class UpdateProfileSerializer(serializers.ModelSerializer):
 	phone_code = serializers.CharField()

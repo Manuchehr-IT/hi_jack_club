@@ -8,7 +8,7 @@ from django.http import HttpResponse
 from django.shortcuts import redirect
 from django.urls import path
 from django.utils.html import format_html
-from django.utils.timezone import localtime
+from django.utils import timezone
 
 from .factory import create_tournament_service
 from .models import Tournament, TournamentConfig, TournamentRewardDistributionTemplate, TournamentRewardDistribution, TournamentEventLog, TournamentFeature, TournamentRegistration
@@ -67,20 +67,65 @@ class TournamentConfigInline(admin.StackedInline):  # или TabularInline
         }
 
 
+class TournamentEventLogFormSet(forms.BaseInlineFormSet):
+    def clean(self):
+        super().clean()
+
+        user_events = {}
+        # count_entry = 0
+        # count_elimination = 0
+
+        for form in self.forms:
+            if form.cleaned_data and not form.cleaned_data.get("DELETE", False):
+                event_type = form.cleaned_data.get("event")
+                user = form.cleaned_data.get("user") or form.cleaned_data.get("comment")
+
+                if not user:
+                    continue
+
+                if event_type in ["ENTRY", "FREE_ENTRY", "FREE_ENTRY_DEP", "ELIMINATION"]:
+                    if user not in user_events:
+                        user_events[user] = {"ENTRY": 0, "ELIMINATION": 0}
+
+                    if event_type in ["ENTRY", "FREE_ENTRY", "FREE_ENTRY_DEP"]:
+                        user_events[user]["ENTRY"] += 1
+                    elif event_type == "ELIMINATION":
+                        user_events[user]["ELIMINATION"] += 1
+
+        for user, events in user_events.items():
+            count_entry = events["ENTRY"]
+            count_elimination = events["ELIMINATION"]
+
+            if user and (count_entry > 1 or count_elimination > 1):
+                raise forms.ValidationError(format_html(
+                    "У пользователя <b>{}</b> должно быть по 1 Entry и Elimination, сейчас Entry: {}; Elimination: {}",
+                    user, count_entry, count_elimination
+                ))
+
+            if count_entry != count_elimination:
+                if user:
+                    raise forms.ValidationError(format_html(
+                        "У пользователя <b>{}</b> Отсутвует {}",
+                        user, 'Entry' if count_entry == 0 else 'Elimination'
+                    ))
+                raise forms.ValidationError(f"У неизвестных пользователей неравное кол-во Entry и Elimination")
+
 class TournamentEventLogInline(admin.TabularInline):
     model = TournamentEventLog
+    formset = TournamentEventLogFormSet
     extra = 0
 
-    classes = ['collapse']
+    # classes = ["collapse"]
     verbose_name = "Событие"
     verbose_name_plural = "События"
 
-    fields = ['user', 'event', 'count', 'multiplier', 'recorded_at']
+    fields = ['user', 'event', 'count', 'multiplier', 'recorded_at', 'comment']
 
     class Media:
         css = {
             'all': ['admin/css/hide-inline-original.css']
         }
+
 
 class TournamentRewardDistributionFormSet(forms.BaseInlineFormSet):
     def clean(self):
@@ -92,8 +137,8 @@ class TournamentRewardDistributionFormSet(forms.BaseInlineFormSet):
                 percent = form.cleaned_data.get('percent', Decimal("0"))
                 total += percent
 
-        if total != 100:
-            raise ValidationError(f'Сумма процентов должна быть 100%, сейчас: {total}%')
+        if 100 < total > 0:
+            raise ValidationError(f'Сумма процентов должна быть 100% или 0%, сейчас: {total}%')
 
 class TournamentRewardDistributionInline(admin.TabularInline):
     model = TournamentRewardDistribution
@@ -123,7 +168,7 @@ class TournamentRewardDistributionTemplateAdmin(admin.ModelAdmin):
 
 @admin.register(Tournament)
 class TournamentAdmin(admin.ModelAdmin):
-    inlines = [TournamentFeatureInline, TournamentConfigInline, TournamentEventLogInline]
+    inlines = [TournamentFeatureInline, TournamentConfigInline]
 
     list_display = ['id', 'title', 'location', 'started_at_compact', 'status_badge', 'participants_count', 'tournament_action_button']
     list_display_links = ['id', 'title']
@@ -145,7 +190,7 @@ class TournamentAdmin(admin.ModelAdmin):
         if obj:  # Редактирование существующего турнира
             fields.extend([
                 ["Статус", {
-                    "fields": ["status_display"]
+                    "fields": ["status_display", "olap_report_completed"]
                 }],
                 ["Даты", {
                     "fields": ["created_at", "updated_at"]
@@ -157,6 +202,13 @@ class TournamentAdmin(admin.ModelAdmin):
 
         return fields
 
+    def get_inlines(self, request, obj=None):
+        if obj and obj.status == Tournament.StatusType.INACTIVE:
+            return [*self.inlines, TournamentEventLogInline]
+
+        return self.inlines
+
+
     @admin.action(description="Пересчитать журнал событий турнира для рейтинга")
     def recalc_event_logs(self, request, queryset):
         count = 0
@@ -166,16 +218,16 @@ class TournamentAdmin(admin.ModelAdmin):
 
         self.message_user(request, f"Пересчитаны рейтинги пользователей в турнирах: {count}")
 
-    # @admin.action(description="Обновить журнал событий турнира из OLAP отчёта")
-    # def update_event_logs(self, request, queryset):
-    #     tournament_service = create_tournament_service()
-    #     count = 0
+    @admin.action(description="Обновить журнал событий турнира из OLAP отчёта")
+    def update_event_logs(self, request, queryset):
+        tournament_service = create_tournament_service()
+        count = 0
 
-    #     for tournament in queryset:
-    #         tournament_service.process_olap_report(tournament.id)
-    #         count += 1
+        for tournament in queryset:
+            tournament_service.process_olap_report(tournament.id, is_forced=True)
+            count += 1
 
-    #     self.message_user(request, f"Обновлено {count} турниров")
+        self.message_user(request, f"Обновлено {count} турниров")
 
     def participants_count(self, obj):
         return obj.get_participants_count()
@@ -207,7 +259,7 @@ class TournamentAdmin(admin.ModelAdmin):
 
     # Компактное отображение даты старта
     def started_at_compact(self, obj):
-        return localtime(obj.started_at).strftime('%d.%m.%Y %H:%M')
+        return timezone.localtime(obj.started_at).strftime('%d.%m.%Y %H:%M')
     started_at_compact.short_description = 'Старт'
     started_at_compact.admin_order_field = 'started_at'
 
@@ -263,7 +315,7 @@ class TournamentAdmin(admin.ModelAdmin):
     def start_tournament(self, request, tournament_id):
         try:
             tournament = Tournament.objects.get(id=tournament_id)
-            tournament.started_at = timezone.now()
+            # tournament.started_at = timezone.now()
             tournament.status = 'ACTIVE'
             tournament.save()
             
@@ -334,14 +386,14 @@ class TournamentRegistrationAdmin(admin.ModelAdmin):
                 registration.user.id,
                 registration.tournament.title,
                 registration.tournament.status,
-                localtime(registration.tournament.started_at).strftime("%d.%m.%Y %H:%M"),
+                timezone.localtime(registration.tournament.started_at).strftime("%d.%m.%Y %H:%M"),
                 registration.user.first_name,
                 registration.user.username,
                 registration.user.nickname,
                 registration.user.phone,
                 registration.knockouts,
                 registration.points,
-                localtime(registration.created_at).strftime("%d.%m.%Y %H:%M")
+                timezone.localtime(registration.created_at).strftime("%d.%m.%Y %H:%M")
             ])
 
         return response
@@ -380,13 +432,13 @@ class TournamentRegistrationAdmin(admin.ModelAdmin):
 
     @admin.display(ordering='created_at', description='Зарегистрирован')
     def created_at_compact(self, obj):
-        return localtime(obj.created_at).strftime('%d.%m.%Y %H:%M')
+        return timezone.localtime(obj.created_at).strftime('%d.%m.%Y %H:%M')
 
 
 @admin.register(TournamentEventLog)
 class TournamentEventLogAdmin(admin.ModelAdmin):
-    list_display = ['id', 'tournament', 'user_nickname', 'user_phone', 'event', 'count', 'multiplier', 'display_points', 'recorded_at']
-    list_filter = ['user', 'tournament', 'event', 'recorded_at']
+    list_display = ['id', 'tournament', 'user_nickname', 'user_phone', 'display_event', 'count', 'multiplier', 'display_points', 'recorded_at', 'comment']
+    list_filter = ['user', 'tournament', 'event', 'recorded_at', 'is_valid']
     search_fields = ['user__username', 'user__nickname', 'user__phone', 'tournament__title']
     readonly_fields = ['created_at', 'updated_at']
     list_select_related = ['user', 'tournament']
@@ -413,15 +465,24 @@ class TournamentEventLogAdmin(admin.ModelAdmin):
 
     @admin.display(ordering="user__nickname", description="Nickname")
     def user_nickname(self, obj):
-        return obj.user.nickname
+        if obj.user:
+            return obj.user.nickname
 
     @admin.display(ordering="user__phone", description="Phone")
     def user_phone(self, obj):
-        return obj.user.phone
+        if obj.user:
+            return obj.user.phone
 
     @admin.display(description="Очки")  # ordering не будет работать для property
     def display_points(self, obj):
         return obj.points
+
+    @admin.display(ordering="event", description="Событие")
+    def display_event(self, obj):
+        if obj.is_valid:
+            return format_html("<p>{}</p>", obj.get_event_display())
+
+        return format_html("<p style='color: red'>{}</p>", obj.get_event_display())
 
     def has_add_permission(self, request):
         return False
@@ -429,5 +490,5 @@ class TournamentEventLogAdmin(admin.ModelAdmin):
     def has_change_permission(self, request, obj=None):
         return False
 
-    def has_delete_permission(self, request, obj=None):
-        return False
+    # def has_delete_permission(self, request, obj=None):
+    #     return False

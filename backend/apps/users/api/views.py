@@ -78,7 +78,7 @@ class UserViewSet(ListModelMixin, GenericViewSet):
 	pagination_class = LimitOffsetPagination
 	queryset = User.objects.all()
 	filter_backends = [filters.OrderingFilter]
-	ordering_fields = ["created_at", "knockouts", "rating"]
+	ordering_fields = ["created_at", "knockouts", "points"]
 	ordering = ["created_at"]
 
 	def __init__(self, *args, **kwargs):
