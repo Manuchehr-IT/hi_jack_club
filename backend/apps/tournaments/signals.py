@@ -37,7 +37,6 @@ def on_event_change(sender, instance, **kwargs):
 	)
 
 	event_logs.update(is_valid=is_valid)
-	# TournamentEventLog.objects.bulk_update(event_logs, is_valid=is_valid)
 
 	if instance.user:
 		logger.info(f"TournamentEventLog on_event_change: {instance}, TournamentEventLog.user: {instance.user}")
