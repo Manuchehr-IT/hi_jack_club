@@ -104,7 +104,7 @@ async def create_app() -> FastAPI:
 async def main() -> None:
 	app = await create_app()
 
-	config = uvicorn.Config(app=app, host=settings.app.host, port=settings.app.port, log_level="info", access_log=False)
+	config = uvicorn.Config(app=app, host="0.0.0.0", port=8000, log_level="info", access_log=False)
 	server = uvicorn.Server(config)
 
 	await server.serve()

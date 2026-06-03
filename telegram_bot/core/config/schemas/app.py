@@ -12,9 +12,6 @@ class AppSettings(BaseSettings):
 	api_url: str
 
 	domain: str
-	host: str
-	port: int
-
 
 	@property
 	def languages_list(self) -> List[str]:

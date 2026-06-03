@@ -58,8 +58,6 @@ services:
       - backend/.env.${ENVIRONMENT}
     environment:
       APP_DOMAIN: ${BACKEND_DOMAIN}
-      APP_HOST: ${BACKEND_HOST}
-      APP_PORT: ${BACKEND_PORT}
       APP_API_URL: https://${BACKEND_DOMAIN}/api
     labels:
       - "traefik.enable=true"
@@ -67,7 +65,7 @@ services:
       - "traefik.http.routers.backend_poker.entrypoints=websecure"
       - "traefik.http.routers.backend_poker.tls=true"
       - "traefik.http.routers.backend_poker.tls.certresolver=myresolver"
-      - "traefik.http.services.backend_poker.loadbalancer.server.port=${BACKEND_PORT}"
+      - "traefik.http.services.backend_poker.loadbalancer.server.port=8000"
       - "traefik.http.routers.backend_poker.priority=50"
     # healthcheck:
     #   test: ["CMD", "curl", "-f", "http://backend:${DJANGO_PORT}/health/"]
@@ -103,7 +101,7 @@ services:
       - "traefik.http.routers.nginx_poker.entrypoints=websecure"
       - "traefik.http.routers.nginx_poker.tls=true"
       - "traefik.http.routers.nginx_poker.tls.certresolver=myresolver"
-      - "traefik.http.services.nginx_poker.loadbalancer.server.port=${NGINX_PORT}"
+      - "traefik.http.services.nginx_poker.loadbalancer.server.port=80"
       - "traefik.http.routers.nginx_poker.priority=150"
     depends_on:
       - backend
@@ -122,15 +120,13 @@ services:
       - "traefik.http.routers.telegram_bot_poker.entrypoints=websecure"
       - "traefik.http.routers.telegram_bot_poker.tls=true"
       - "traefik.http.routers.telegram_bot_poker.tls.certresolver=myresolver"
-      - "traefik.http.services.telegram_bot_poker.loadbalancer.server.port=${TELEGRAM_BOT_PORT}"
+      - "traefik.http.services.telegram_bot_poker.loadbalancer.server.port=8000"
       - "traefik.http.routers.telegram_bot_poker.priority=100"
     env_file:
       - .env
       - telegram_bot/.env.${ENVIRONMENT}
     environment:
       APP_DOMAIN: ${TELEGRAM_BOT_DOMAIN}
-      APP_HOST: ${TELEGRAM_BOT_HOST}
-      APP_PORT: ${TELEGRAM_BOT_PORT}
       APP_URL: https://${FRONTEND_DOMAIN}
       APP_API_URL: https://${BACKEND_DOMAIN}/api
     volumes:
@@ -157,7 +153,7 @@ services:
       - "traefik.http.routers.frontend_poker.entrypoints=websecure"
       - "traefik.http.routers.frontend_poker.tls=true"
       - "traefik.http.routers.frontend_poker.tls.certresolver=myresolver"
-      - "traefik.http.services.frontend_poker.loadbalancer.server.port=${FRONTEND_PORT}"
+      - "traefik.http.services.frontend_poker.loadbalancer.server.port=5173"
       - "traefik.http.routers.frontend_poker.priority=1"
     env_file:
       - frontend/.env.${ENVIRONMENT}
