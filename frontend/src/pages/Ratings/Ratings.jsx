@@ -68,7 +68,7 @@ const Ratings = () => {
             </button>
           </div>
 
-          <div className={`${styles.subtitle} ${tabSection === 'monthly' ? styles.subtitleOrange : styles.subtitleGreen}`}>
+          <div className={styles.subtitle}>
             <span>
               {tabSection === 'global'
                 ? 'Фундаментальные достижения'
@@ -78,7 +78,7 @@ const Ratings = () => {
         </section>
 
         {tabSection === 'monthly' && (
-          <div className={`${styles.monthPicker} ${styles.monthPickerOrange}`}>
+          <div className={styles.monthPicker}>
             <button className={styles.monthArrow} onClick={prevMonth}>‹</button>
             <span className={styles.monthLabel}>
               {MONTHS_RU[monthDate.getMonth()]} {monthDate.getFullYear()}
@@ -88,7 +88,7 @@ const Ratings = () => {
         )}
 
         <div className={styles.table}>
-          <div className={styles.tableHeader}>
+          <div className={`${styles.tableHeader} ${tabSection === 'monthly' ? styles.tableHeaderOrange : styles.tableHeaderGreen}`}>
             <p className={styles.headerCell}></p>
             <p className={`${styles.headerCell} ${styles.headerNicknameCell}`}>Никнеймы</p>
             <p className={styles.headerCell}>Нокауты</p>
