@@ -68,7 +68,7 @@ const Ratings = () => {
             </button>
           </div>
 
-          <div className={styles.subtitle}>
+          <div className={`${styles.subtitle} ${tabSection === 'monthly' ? styles.subtitleOrange : styles.subtitleGreen}`}>
             <span>
               {tabSection === 'global'
                 ? 'Фундаментальные достижения'
@@ -78,7 +78,7 @@ const Ratings = () => {
         </section>
 
         {tabSection === 'monthly' && (
-          <div className={styles.monthPicker}>
+          <div className={`${styles.monthPicker} ${styles.monthPickerOrange}`}>
             <button className={styles.monthArrow} onClick={prevMonth}>‹</button>
             <span className={styles.monthLabel}>
               {MONTHS_RU[monthDate.getMonth()]} {monthDate.getFullYear()}
