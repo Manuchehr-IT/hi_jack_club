@@ -17,7 +17,7 @@ class UserSerializer(serializers.ModelSerializer):
 	def get_tournaments_count(self, obj):
 		if hasattr(obj, 'tournaments_count'):
 			return obj.tournaments_count
-		return obj.tournament_registrations.filter(attended=True).count()
+		return obj.tournament_registrations.count()
 
 class UpdateProfileSerializer(serializers.ModelSerializer):
 	phone_code = serializers.CharField()

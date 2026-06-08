@@ -84,11 +84,7 @@ class UserViewSet(ListModelMixin, GenericViewSet):
 	def get_queryset(self):
 		from django.db.models import Count, Q
 		return User.objects.annotate(
-			tournaments_count=Count(
-				'tournament_registrations',
-				filter=Q(tournament_registrations__attended=True),
-				distinct=True,
-			)
+			tournaments_count=Count('tournament_registrations', distinct=True)
 		)
 
 	def __init__(self, *args, **kwargs):
