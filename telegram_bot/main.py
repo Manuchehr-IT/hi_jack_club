@@ -21,7 +21,7 @@ async def create_app() -> FastAPI:
 
 	storage = RedisStorage(redis)
 	dp = Dispatcher(storage=storage)
-	bot = Bot(token=settings.telegram_bot.token, default=DefaultBotProperties(parse_mode="HTML"), session=session)
+	bot = Bot(token=settings.telegram_bot.token, default=DefaultBotProperties(parse_mode="HTML"))
 
 	container.bot = bot
 
