@@ -81,6 +81,16 @@ class UserViewSet(ListModelMixin, GenericViewSet):
 	ordering_fields = ["created_at", "knockouts", "rating"]
 	ordering = ["created_at"]
 
+	def get_queryset(self):
+		from django.db.models import Count, Q
+		return User.objects.annotate(
+			tournaments_count=Count(
+				'tournament_registrations',
+				filter=Q(tournament_registrations__attended=True),
+				distinct=True,
+			)
+		)
+
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs)
 		self.user_service = create_user_service()
@@ -162,24 +172,59 @@ class UserViewSet(ListModelMixin, GenericViewSet):
 
 		serializer.save(privacy_policy_accepted=True)
 
-
-		# if User.objects.exclude(pk=request.user.pk).filter(phone=full_phone).exists():
-		# 	return CustomValidationError(
-		# 		code="phone_already_taken",
-		# 		message="This phone number is already in use",
-		# 		field="phone",
-		# 		conflict_with="existing_user",
-		# 		status=409
-		# 	)
-
-		# if User.objects.exclude(pk=request.user.pk).filter(nickname=nickname).exists():
-		# 	return CustomValidationError(
-		# 		code="nickname_already_taken",
-		# 		message="This nickname is already occupied",
-		# 		field="nickname",
-		# 		conflict_with="existing_user",
-		# 		status=409
-		# 	)
-
-
 		return Response(UserSerializer(request.user).data)
+
+	@action(detail=False, methods=["get"], url_path="monthly_rating")
+	def monthly_rating(self, request):
+		from django.db.models import Sum, Count, Q
+		from django.utils import timezone
+		from apps.tournaments.models import TournamentRegistration
+
+		month_str = request.query_params.get("month")
+		if month_str:
+			try:
+				year, month = map(int, month_str.split("-"))
+			except (ValueError, AttributeError):
+				return Response({"detail": "Неверный формат месяца. Используйте YYYY-MM."}, status=400)
+		else:
+			now = timezone.now()
+			year, month = now.year, now.month
+
+		results = (
+			TournamentRegistration.objects
+			.filter(
+				tournament__started_at__year=year,
+				tournament__started_at__month=month,
+			)
+			.exclude(points=0, knockouts=0)
+			.values("user_id")
+			.annotate(
+				total_points=Sum("points"),
+				total_knockouts=Sum("knockouts"),
+				tournaments_count=Count("id"),
+			)
+			.order_by("-total_points")
+		)
+
+		user_ids = [r["user_id"] for r in results]
+		users_map = {u.id: u for u in User.objects.filter(id__in=user_ids)}
+
+		data = []
+		for r in results:
+			user = users_map.get(r["user_id"])
+			if not user:
+				continue
+			avatar_url = None
+			if user.avatar_path:
+				avatar_url = request.build_absolute_uri(user.avatar_path.url)
+			data.append({
+				"id": user.id,
+				"nickname": user.nickname,
+				"username": user.username,
+				"avatar_path": avatar_url,
+				"rating": r["total_points"] or 0,
+				"knockouts": r["total_knockouts"] or 0,
+				"tournaments_count": r["tournaments_count"] or 0,
+			})
+
+		return Response(data)

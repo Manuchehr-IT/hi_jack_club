@@ -193,3 +193,53 @@ img.numberCell {
 .table p {
   font-family: "Days One", sans-serif;
 }
+
+.activeTab {
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.5) !important;
+}
+
+.monthPicker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin: 12px 16px 0;
+}
+
+.monthArrow {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: white;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+}
+
+.monthArrow:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.monthLabel {
+  font-family: "Days One", sans-serif;
+  font-size: 13px;
+  color: white;
+  text-transform: uppercase;
+  min-width: 160px;
+  text-align: center;
+}
+
+.emptyState {
+  text-align: center;
+  color: rgba(255, 255, 255, 0.5);
+  padding: 24px 0;
+  font-family: "Days One", sans-serif;
+  font-size: 13px;
+}

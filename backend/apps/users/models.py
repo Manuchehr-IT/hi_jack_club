@@ -59,6 +59,8 @@ class User(AbstractBaseUser, PermissionsMixin):
 	referral_code = models.UUIDField(default=uuid.uuid4, unique=True, editable=False, verbose_name="Реферальный код")
 
 	# Игровая статистика
+	rating_initial = models.IntegerField(default=0, verbose_name="Рейтинг (базовый)")
+	knockouts_initial = models.IntegerField(default=0, verbose_name="Нокауты (базовые)")
 	knockouts = models.IntegerField(default=0, verbose_name="Нокауты")
 	rating = models.IntegerField(default=0, verbose_name="Рейтинг")
 

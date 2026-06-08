@@ -14,7 +14,7 @@ class UserAdmin(BaseUserAdmin):
     list_display = ['avatar_icon', 'id', 'telegram_id', 'referrer', 'nickname', 'username', 'phone', 'knockouts', 'rating', 'formatted_created_at']
     list_display_links = ['avatar_icon', 'id', 'telegram_id']
     list_filter = ['is_superuser', 'created_at']
-    list_editable = ['knockouts', 'rating']
+    # list_editable = ['knockouts_initial', 'rating_initial']
     search_fields = ['id', 'telegram_id', 'nickname', 'username', 'phone']
     ordering = ['-created_at']
     actions = ['export_as_csv']
@@ -22,11 +22,14 @@ class UserAdmin(BaseUserAdmin):
     fieldsets = (
         ('Идентификатор', {'fields': ('id', 'telegram_id')}),
         ('Персональная информация', {'fields': ('referrer', 'username', 'nickname', 'phone', 'avatar_preview')}),
-        ('Игровая статистика', {'fields': ('knockouts', 'rating')}),
+        ('Игровая статистика', {
+            'description': 'Базовые значения задаются вручную. Итоговые пересчитываются автоматически: Итог = Базовый + сумма из турниров.',
+            'fields': ('knockouts_initial', 'rating_initial', 'knockouts', 'rating'),
+        }),
         ('Важные даты', {'fields': ('last_login', 'created_at', 'updated_at')}),
     )
 
-    readonly_fields = ['id', 'telegram_id', 'referrer', 'created_at', 'updated_at', 'last_login', 'avatar_preview']
+    readonly_fields = ['id', 'telegram_id', 'referrer', 'created_at', 'updated_at', 'last_login', 'avatar_preview', 'knockouts', 'rating']
 
     def export_as_csv(self, request, queryset):
         response = HttpResponse(content_type='text/csv')

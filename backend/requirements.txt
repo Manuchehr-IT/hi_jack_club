@@ -1,5 +1,6 @@
 celery
 dotenv
+openpyxl
 Django
 djangorestframework
 djangorestframework-simplejwt

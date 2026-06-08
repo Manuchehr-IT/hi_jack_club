@@ -7,10 +7,17 @@ from apps.telegram.utils import parse_telegram_init_data
 from apps.users.models import User
 
 class UserSerializer(serializers.ModelSerializer):
+	tournaments_count = serializers.SerializerMethodField()
+
 	class Meta:
 		model = User
-		fields = ["id", "telegram_id", "username", "avatar_path", "nickname", "phone", "referral_code", "referrals", "knockouts", "rating", "privacy_policy_accepted", "iiko_qr_code"]
-		read_only_fields = ["referral_code", "referrals", "knockouts", "rating", "privacy_policy_accepted", "created_at", "updated_at"]
+		fields = ["id", "telegram_id", "username", "avatar_path", "nickname", "phone", "referral_code", "referrals", "knockouts", "rating", "tournaments_count", "privacy_policy_accepted", "iiko_qr_code"]
+		read_only_fields = ["referral_code", "referrals", "knockouts", "rating", "tournaments_count", "privacy_policy_accepted", "created_at", "updated_at"]
+
+	def get_tournaments_count(self, obj):
+		if hasattr(obj, 'tournaments_count'):
+			return obj.tournaments_count
+		return obj.tournament_registrations.filter(attended=True).count()
 
 class UpdateProfileSerializer(serializers.ModelSerializer):
 	phone_code = serializers.CharField()
