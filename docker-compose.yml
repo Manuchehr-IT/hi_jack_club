@@ -153,7 +153,7 @@ services:
       - "traefik.http.routers.frontend_poker.entrypoints=websecure"
       - "traefik.http.routers.frontend_poker.tls=true"
       - "traefik.http.routers.frontend_poker.tls.certresolver=myresolver"
-      - "traefik.http.services.frontend_poker.loadbalancer.server.port=5173"
+      - "traefik.http.services.frontend_poker.loadbalancer.server.port=80"
       - "traefik.http.routers.frontend_poker.priority=1"
     env_file:
       - frontend/.env.${ENVIRONMENT}
