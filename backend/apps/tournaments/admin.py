@@ -195,7 +195,7 @@ class TournamentAdmin(admin.ModelAdmin):
         readonly_fields = ['created_at', 'updated_at', 'status_display', 'participants_count_display']
 
         if obj.status == 'INACTIVE':
-            all_fields = [f.name for f in self.model._meta.fields]
+            all_fields = [f.name for f in self.model._meta.fields if f.name != 'started_at']
             readonly_fields = all_fields + ['status_display', 'participants_count_display']
 
         return readonly_fields
