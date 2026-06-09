@@ -22,7 +22,7 @@ const Ratings = () => {
   useTelegramBackButton(true);
 
   const now = new Date();
-  const [tabSection, setTabSection] = useState('global');
+  const [tabSection, setTabSection] = useState('monthly');
   const [monthDate, setMonthDate] = useState(new Date(now.getFullYear(), now.getMonth(), 1));
 
   const { users: globalUsers, isLoading: globalLoading } = useUsers();
