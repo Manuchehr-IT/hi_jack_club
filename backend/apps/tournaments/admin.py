@@ -82,9 +82,21 @@ def _parse_excel(file) -> tuple[list[dict], list[str]]:
     """
     wb = openpyxl.load_workbook(BytesIO(file.read()), data_only=True)
     ws = wb.active
+    if ws is None:
+        return [], ["Не удалось открыть лист Excel"]
 
-    headers = [str(cell.value).strip() if cell.value is not None else '' for cell in ws[1]]
-    hl = [h.lower() for h in headers]
+    # Ищем строку с заголовками в первых 5 строках
+    header_row_num = None
+    hl = []
+    for i, row in enumerate(ws.iter_rows(min_row=1, max_row=5, values_only=True), start=1):
+        row_lower = [str(v).strip().lower() if v is not None else '' for v in row]
+        if 'игр рейт' in row_lower or 'игр_рейт' in row_lower or 'points' in row_lower:
+            header_row_num = i
+            hl = row_lower
+            break
+
+    if header_row_num is None:
+        return [], ["Не найдена строка с заголовками (ищу 'ИГР Рейт' в первых 5 строках)"]
 
     id_idx        = _find_col(hl, ['id'])
     phone_idx     = _find_col(hl, ['phone', 'телефон'])
@@ -101,7 +113,7 @@ def _parse_excel(file) -> tuple[list[dict], list[str]]:
         return [], errors
 
     rows = []
-    for row_num, row in enumerate(ws.iter_rows(min_row=2, values_only=True), start=2):
+    for row_num, row in enumerate(ws.iter_rows(min_row=header_row_num + 1, values_only=True), start=header_row_num + 1):
         if not any(v is not None for v in row):
             continue
 
