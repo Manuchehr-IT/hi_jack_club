@@ -17,7 +17,7 @@ from infrastructure.redis import redis
 from middlewares import register_middlewares
 
 async def create_app() -> FastAPI:
-	session = AiohttpSession(proxy=settings.proxy)
+	# session = AiohttpSession(proxy=settings.proxy)
 
 	storage = RedisStorage(redis)
 	dp = Dispatcher(storage=storage)
