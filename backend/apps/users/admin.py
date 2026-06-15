@@ -29,7 +29,13 @@ class UserAdmin(BaseUserAdmin):
         ('Важные даты', {'fields': ('last_login', 'created_at', 'updated_at')}),
     )
 
-    readonly_fields = ['id', 'telegram_id', 'referrer', 'created_at', 'updated_at', 'last_login', 'avatar_preview', 'knockouts', 'rating']
+    readonly_fields = ['id', 'telegram_id', 'created_at', 'updated_at', 'last_login', 'avatar_preview', 'knockouts', 'rating']
+
+    def get_readonly_fields(self, request, obj=None):
+        readonly = list(self.readonly_fields)
+        if obj and obj.referrer_id:
+            readonly.append('referrer')
+        return tuple(readonly)
 
     def export_as_csv(self, request, queryset):
         response = HttpResponse(content_type='text/csv')
