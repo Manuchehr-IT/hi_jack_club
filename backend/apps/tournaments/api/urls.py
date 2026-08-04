@@ -14,9 +14,11 @@ urlpatterns = [
 		path("today-status/", nearest_tournament.today_status),
 		path("<int:pk>/registration-status/", tournament_registration.registration_status),
 		path("<int:pk>/register/", tournament_registration.register),
+		path("<int:pk>/register-internal/", tournament_registration.register_internal),
 		path("<int:pk>/unregister/", tournament_registration.unregister),
 		path("<int:pk>/availability/", tournament_registration.availability),
 		path("<int:pk>/participants/", tournament_participants.participants),
+		path("list-internal/", tournament_lifecycle.list_internal),
 		path("<int:pk>/start-internal/", tournament_lifecycle.start_internal),
 		path("<int:pk>/finish-internal/", tournament_lifecycle.finish_internal),
 

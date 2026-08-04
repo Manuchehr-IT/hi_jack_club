@@ -23,6 +23,41 @@ class InternalApiPermission(permissions.BasePermission):
 
 @extend_schema(
 	tags=["Tournaments"],
+	summary="Список турниров для внутренних сервисов.",
+	description="Только для вызова из Telegram-бота с правильным X-Internal-Api-Key",
+	responses={
+		200: {
+			"type": "array",
+			"items": {
+				"type": "object",
+				"properties": {
+					"id": {"type": "integer"},
+					"title": {"type": "string"},
+					"started_at": {"type": "string", "format": "date-time"}
+				}
+			}
+		}
+	}
+)
+@api_view(["GET"])
+@permission_classes([InternalApiPermission])
+def list_internal(request):
+	"""
+	GET /api/tournaments/list-internal/?status=IN_QUEUE
+	"""
+	status_param = request.query_params.get("status")
+	queryset = Tournament.objects.all()
+	if status_param:
+		queryset = queryset.filter(status=status_param)
+	queryset = queryset.order_by("started_at")
+
+	return Response([
+		{"id": tournament.id, "title": tournament.title, "started_at": tournament.started_at.isoformat()}
+		for tournament in queryset
+	])
+
+@extend_schema(
+	tags=["Tournaments"],
 	summary="Внутренний endpoint для запуска турнира.",
 	description="Только для вызова из Celery worker с правильным X-Internal-Api-Key",
 	responses={

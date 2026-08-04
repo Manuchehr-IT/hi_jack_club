@@ -4,19 +4,24 @@ from aiogram import Bot, F, Router
 from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery
+from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from celery_app.tasks.telegram import send_telegram, broadcast_messages
 from celery_app.tasks.telegram.schemas import SendMethod
 from core.config import settings
 from filters.users import IsAdminFilter
 # from infrastructure.redis import redis
-from keyboards import BaseCallbackData
-from keyboards.spamming import SpammingCallbackData, SpammingReplyKeyboard
+from keyboards import BaseCallbackData, ItemCallbackData
+from keyboards.spamming import SpammingCallbackData, SpammingInlineKeyboard, SpammingReplyKeyboard
+from keyboards.tournament import TournamentInlineKeyboard
+from services.tournament import TournamentService
 from services.user import UserService
 from schemes.user import User
 from states.admin import StateSpamming
 from utils.i18n import i18n
 from utils.telegram import SafeMessage
+
+TOURNAMENT_ATTACH_TAG = "spamming_tournament"
 
 router = Router()
 
@@ -70,6 +75,46 @@ async def handle_edit_post(call: CallbackQuery, callback_data: SpammingCallbackD
 
 @router.callback_query(
 	F.message.chat.type == "private",
+	SpammingCallbackData.filter((F.role == "admin") & (F.action == "attach_tournament")),
+	StateSpamming.settings,
+	IsAdminFilter()
+)
+async def handle_attach_tournament(call: CallbackQuery, callback_data: SpammingCallbackData, state: FSMContext, bot: Bot, user: User):
+	spamming_locale = i18n.translate(namespace="responses.spamming", lang=user.language_code)
+
+	tournaments = await TournamentService.get_in_queue_tournaments()
+	if not tournaments:
+		return await call.answer(text=spamming_locale["attach_tournament"]["none_available"], show_alert=True)
+
+	await call.answer()
+
+	builder = InlineKeyboardBuilder()
+	for tournament in tournaments:
+		builder.button(text=tournament["title"], callback_data=ItemCallbackData(tag=TOURNAMENT_ATTACH_TAG, id=tournament["id"]))
+	builder.button(text="▪️ Без кнопки", callback_data=ItemCallbackData(tag=TOURNAMENT_ATTACH_TAG, id=0))
+	builder.adjust(1)
+
+	await call.message.edit_text(text=spamming_locale["attach_tournament"]["message"], reply_markup=builder.as_markup())
+
+@router.callback_query(
+	F.message.chat.type == "private",
+	ItemCallbackData.filter(F.tag == TOURNAMENT_ATTACH_TAG),
+	StateSpamming.settings,
+	IsAdminFilter()
+)
+async def handle_select_tournament(call: CallbackQuery, callback_data: ItemCallbackData, state: FSMContext, bot: Bot, user: User):
+	spamming_locale = i18n.translate(namespace="responses.spamming", lang=user.language_code)
+
+	tournament_id = callback_data.id or None
+	await state.update_data(tournament_id=tournament_id)
+
+	alert_text = spamming_locale["attach_tournament"]["attached"] if tournament_id else spamming_locale["attach_tournament"]["detached"]
+	await call.answer(text=alert_text)
+
+	await call.message.edit_text(text=spamming_locale["preview"]["message"], reply_markup=SpammingInlineKeyboard.settings())
+
+@router.callback_query(
+	F.message.chat.type == "private",
 	SpammingCallbackData.filter((F.role == "admin") & (F.action == "run")),
 	StateSpamming.settings,
 	IsAdminFilter()
@@ -90,6 +135,14 @@ async def handle_run(call: CallbackQuery, callback_data: SpammingCallbackData, s
 		method = SendMethod.TEXT
 		payload = {"text": data_state["text"]}
 
+	tournament_id = data_state.get("tournament_id")
+	tournament_button_skipped = False
+	if tournament_id:
+		if method == SendMethod.MEDIA_GROUP:
+			# Telegram Bot API не поддерживает reply_markup для sendMediaGroup
+			tournament_button_skipped = True
+		else:
+			payload["reply_markup"] = TournamentInlineKeyboard.register_markup(tournament_id)
 
 	user_ids = await UserService.get_user_ids()
 	total_users = len(user_ids)
@@ -99,6 +152,8 @@ async def handle_run(call: CallbackQuery, callback_data: SpammingCallbackData, s
 		total_users=total_users,
 		spamming_id=spamming_id
 	)
+	if tournament_button_skipped:
+		text += "\n\n" + spamming_locale["attach_tournament"]["skipped_for_media"]
 
 	await SafeMessage.message_delete(message=call.message)
 	await call.message.answer(text=text)

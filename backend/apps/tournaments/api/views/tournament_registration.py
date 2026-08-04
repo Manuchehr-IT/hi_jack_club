@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.db import transaction
 from drf_spectacular.utils import extend_schema
 from rest_framework.decorators import api_view, permission_classes
@@ -7,8 +8,34 @@ from rest_framework.response import Response
 
 from apps.tournaments.models import Tournament, TournamentRegistration
 from apps.tournaments.api.serializers import TournamentRegistrationSerializer
+from apps.tournaments.api.views.tournament_lifecycle import InternalApiPermission
 from celery_app.tasks.telegram import send_telegram
 from celery_app.tasks.telegram.schemas import SendMethod
+
+User = get_user_model()
+
+def _perform_registration(pk, user):
+	"""Общая логика регистрации на турнир. Возвращает (registration, error_response)."""
+	with transaction.atomic():
+		tournament = Tournament.objects.select_for_update().filter(pk=pk).first()
+		if not tournament:
+			return None, Response({"detail": "Турнир не найден"}, status=404)
+
+		can, error = tournament.can_register(user)
+		if not can:
+			return None, Response({"detail": error}, status=400)
+
+		status_type = tournament.compute_registration_status()
+		if not status_type:
+			return None, Response({"detail": "Достигнут лимит участников"}, status=400)
+
+		registration = TournamentRegistration.objects.create(
+			tournament=tournament,
+			user=user,
+			status=status_type
+		)
+
+	return registration, None
 
 @extend_schema(
 	tags=["Tournaments"],
@@ -94,29 +121,51 @@ def register(request, pk):
 	"""
 	POST /api/tournaments/{id}/register/
 	"""
-	user = request.user
-
-	with transaction.atomic():
-		tournament = Tournament.objects.select_for_update().filter(pk=pk).first()
-		if not tournament:
-			return Response({"detail": "Турнир не найден"}, status=404)
-
-		can, error = tournament.can_register(user)
-		if not can:
-			return Response({"detail": error}, status=400)
-
-		status_type = tournament.compute_registration_status()
-		if not status_type:
-			return Response({"detail": "Достигнут лимит участников"}, status=400)
-
-		registration = TournamentRegistration.objects.create(
-			tournament=tournament,
-			user=user,
-			status=status_type
-		)
+	registration, error_response = _perform_registration(pk, request.user)
+	if error_response:
+		return error_response
 
 	serializer = TournamentRegistrationSerializer(registration, context={"request": request})
 	return Response(serializer.data, status=201)
+
+@extend_schema(
+	tags=["Tournaments"],
+	summary="Регистрация в турнире по telegram_id (для кнопки в рассылке)",
+	description="Только для вызова из Telegram-бота с правильным X-Internal-Api-Key",
+	responses={
+		201: {
+			"type": "object",
+			"properties": {
+				"status": {"type": "string", "enum": TournamentRegistration.StatusType.values}
+			}
+		},
+		400: {
+			"type": "object",
+			"properties": {
+				"detail": {"type": "string"}
+			}
+		}
+	}
+)
+@api_view(["POST"])
+@permission_classes([InternalApiPermission])
+def register_internal(request, pk):
+	"""
+	POST /api/tournaments/{id}/register-internal/
+	"""
+	telegram_id = request.data.get("telegram_id")
+	if not telegram_id:
+		return Response({"detail": "telegram_id не передан"}, status=400)
+
+	user = User.objects.filter(telegram_id=telegram_id).first()
+	if not user:
+		return Response({"detail": "Сначала нужно зарегистрироваться в приложении"}, status=400)
+
+	registration, error_response = _perform_registration(pk, user)
+	if error_response:
+		return error_response
+
+	return Response({"status": registration.status}, status=201)
 
 @extend_schema(
 	tags=["Tournaments"],
