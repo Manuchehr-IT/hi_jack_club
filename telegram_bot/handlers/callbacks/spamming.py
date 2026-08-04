@@ -25,6 +25,25 @@ TOURNAMENT_ATTACH_TAG = "spamming_tournament"
 
 router = Router()
 
+def _build_broadcast_payload(data_state: dict):
+	if data_state.get("media_json"):
+		method = SendMethod.MEDIA_GROUP
+		payload = {"media": json.dumps(data_state["media_json"])}
+	else:
+		method = SendMethod.TEXT
+		payload = {"text": data_state["text"]}
+
+	tournament_id = data_state.get("tournament_id")
+	tournament_button_skipped = False
+	if tournament_id:
+		if method == SendMethod.MEDIA_GROUP:
+			# Telegram Bot API не поддерживает reply_markup для sendMediaGroup
+			tournament_button_skipped = True
+		else:
+			payload["reply_markup"] = TournamentInlineKeyboard.register_markup(tournament_id)
+
+	return method, payload, tournament_button_skipped
+
 @router.callback_query(F.message.chat.type == "private", BaseCallbackData.filter((F.role == "admin") & (F.action == "spamming")), IsAdminFilter())
 async def handle_spamming(call: CallbackQuery, callback_data: BaseCallbackData, state: FSMContext, bot: Bot, user: User):
 	await SafeMessage.message_delete(message=call.message)
@@ -45,12 +64,7 @@ async def handle_preview(call: CallbackQuery, callback_data: SpammingCallbackDat
 
 	await call.answer()
 
-	if data_state.get("media_json"):
-		method = SendMethod.MEDIA_GROUP
-		payload = {"media": json.dumps(data_state["media_json"])}
-	else:
-		method = SendMethod.TEXT
-		payload = {"text": data_state["text"]}
+	method, payload, _ = _build_broadcast_payload(data_state)
 
 	send_telegram.delay(
 		telegram_bot_token=settings.telegram_bot.token,
@@ -134,21 +148,7 @@ async def handle_run(call: CallbackQuery, callback_data: SpammingCallbackData, s
 	# 	return await call.answer(text=text, show_alert=True)
 
 	data_state = await state.get_data()
-	if data_state.get("media_json"):
-		method = SendMethod.MEDIA_GROUP
-		payload = {"media": json.dumps(data_state["media_json"])}
-	else:
-		method = SendMethod.TEXT
-		payload = {"text": data_state["text"]}
-
-	tournament_id = data_state.get("tournament_id")
-	tournament_button_skipped = False
-	if tournament_id:
-		if method == SendMethod.MEDIA_GROUP:
-			# Telegram Bot API не поддерживает reply_markup для sendMediaGroup
-			tournament_button_skipped = True
-		else:
-			payload["reply_markup"] = TournamentInlineKeyboard.register_markup(tournament_id)
+	method, payload, tournament_button_skipped = _build_broadcast_payload(data_state)
 
 	user_ids = await UserService.get_user_ids()
 	total_users = len(user_ids)
