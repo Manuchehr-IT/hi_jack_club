@@ -90,8 +90,14 @@ async def handle_attach_tournament(call: CallbackQuery, callback_data: SpammingC
 
 	builder = InlineKeyboardBuilder()
 	for tournament in tournaments:
-		builder.button(text=tournament["title"], callback_data=ItemCallbackData(tag=TOURNAMENT_ATTACH_TAG, id=tournament["id"]))
-	builder.button(text="▪️ Без кнопки", callback_data=ItemCallbackData(tag=TOURNAMENT_ATTACH_TAG, id=0))
+		builder.button(
+			text=tournament["title"],
+			callback_data=ItemCallbackData(role="admin", action="select", tag=TOURNAMENT_ATTACH_TAG, id=tournament["id"])
+		)
+	builder.button(
+		text="▪️ Без кнопки",
+		callback_data=ItemCallbackData(role="admin", action="select", tag=TOURNAMENT_ATTACH_TAG, id=0)
+	)
 	builder.adjust(1)
 
 	await call.message.edit_text(text=spamming_locale["attach_tournament"]["message"], reply_markup=builder.as_markup())

@@ -1,11 +1,11 @@
 import httpx
-from typing import List
+from typing import Any, Dict, List
 
 from core.config import settings
 
 class TournamentService:
 	@staticmethod
-	async def get_in_queue_tournaments() -> List[dict]:
+	async def get_in_queue_tournaments() -> List[Dict[str, Any]]:
 		response = httpx.get(
 			f"{settings.app.api_url}/tournaments/list-internal/",
 			params={"status": "IN_QUEUE"},
