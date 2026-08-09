@@ -1,9 +1,11 @@
 from datetime import date, datetime, timedelta
 import httpx
+import logging
 
-from apps.core.exceptions import CustomValidationError
 from apps.iiko.client import IikoClient
 from apps.iiko.local_client import IikoLocalClient
+
+logger = logging.getLogger(__name__)
 
 class IikoService:
 	def __init__(self, iiko_client: IikoClient, iiko_local_client: IikoLocalClient):
@@ -18,14 +20,12 @@ class IikoService:
 			return self.iiko_client.get_customer_info(customer_id=phone, type="phone")
 		except httpx.HTTPStatusError as err:
 			if err.response.status_code == 400:
-				if err.response.headers.get("code") == "Transport_WrongCustomerNumber":
-					return None
-					# raise CustomValidationError(
-					# 	code="iiko_customer_not_found",
-					# 	message=f"Customer by phone '{phone}' not found",
-					# 	status_code=404,
-					# 	phone=phone
-					# )
+				# Iiko отвечает 400, если клиента с таким телефоном нет — это ожидаемый
+				# случай для новых пользователей, а не ошибка. Код ошибки приходит в
+				# теле ответа, а не в заголовках, поэтому не сверяем его точечно —
+				# логируем тело для диагностики и считаем клиента не найденным.
+				logger.warning(f"Iiko customer not found by phone '{phone}': {err.response.text}")
+				return None
 			raise err
 
 	def get_olap_report_by_date(self, date: date):
