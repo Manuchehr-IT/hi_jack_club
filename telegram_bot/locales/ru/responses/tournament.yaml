@@ -7,3 +7,7 @@ register:
   error:
     unavailable: |
       ⚠️ Не удалось выполнить регистрацию. Попробуйте позже.
+
+unregister:
+  success: |
+    Вы отписались от турнира.

@@ -84,13 +84,14 @@ class Tournament(models.Model):
 
 		return None
 
-	def can_register(self, user) -> Tuple[bool, str]:
-		"""Можно ли пользователю зарегистрироваться на турнир (по общим правилам)"""
+	def can_register(self, user) -> Tuple[bool, str, str | None]:
+		"""Можно ли пользователю зарегистрироваться на турнир (по общим правилам).
+		Третий элемент — машинный код причины отказа, для клиентов вроде бота."""
 		if not user:
-			return False, "Пользователь не указан"
+			return False, "Пользователь не указан", "NO_USER"
 
 		if self.status != self.StatusType.IN_QUEUE:
-			return False, "Регистрация закрыта"
+			return False, "Регистрация закрыта", "REGISTRATION_CLOSED"
 
 		if self.registrations.filter(
 			user=user,
@@ -98,12 +99,12 @@ class Tournament(models.Model):
 				TournamentRegistration.StatusType.REGISTERED,
 				TournamentRegistration.StatusType.WAITLIST]
 			).exists():
-				return False, "Вы уже зарегистрированы"
+				return False, "Вы уже зарегистрированы", "ALREADY_REGISTERED"
 
 		if self.get_participants_count() >= self.max_participants and self.get_waitlist_count() >= self.max_waitlist:
-			return False, "Достигнут лимит участников"
+			return False, "Достигнут лимит участников", "LIMIT_REACHED"
 
-		return True, ""
+		return True, "", None
 
 	@property
 	def features(self):

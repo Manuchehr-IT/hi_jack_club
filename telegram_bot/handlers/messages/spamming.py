@@ -27,10 +27,11 @@ async def message_cancel(message: Message, state: FSMContext, bot: Bot, user: Us
 			reply_markup=TemplatesInlineKeyboard.admin_menu()
 		)
 	else:
+		data_state = await state.get_data()
 		await state.set_state(StateSpamming.settings)
 		await message.answer(
 			text=i18n.translate(namespace="responses.spamming", key="preview.message", lang=user.language_code),
-			reply_markup=SpammingInlineKeyboard.settings()
+			reply_markup=SpammingInlineKeyboard.settings(tournament_title=data_state.get("tournament_title"))
 		)
 
 @router.message(F.chat.type == "private", F.text | F.caption | F.photo | F.video, StateFilter(StateSpamming.post, StateSpamming.edit_post), IsAdminFilter())
@@ -47,9 +48,9 @@ async def message_post(message: Message, state: FSMContext, bot: Bot, user: User
 
 	if message.photo or message.video:
 		media_json = MediaProcessing.parse_media_messages(messages=album)
-		await state.update_data(text=msg_text, media_json=media_json)
+		data_state = await state.update_data(text=msg_text, media_json=media_json)
 	else:
-		await state.update_data(text=msg_text, media_json=None)
+		data_state = await state.update_data(text=msg_text, media_json=None)
 
 	await state.set_state(StateSpamming.settings)
 
@@ -58,5 +59,5 @@ async def message_post(message: Message, state: FSMContext, bot: Bot, user: User
 
 	await message.answer(
 		text=spamming_locale["preview"]["message"],
-		reply_markup=SpammingInlineKeyboard.settings()
+		reply_markup=SpammingInlineKeyboard.settings(tournament_title=data_state.get("tournament_title"))
 	)

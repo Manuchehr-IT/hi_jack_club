@@ -24,3 +24,12 @@ class TournamentService:
 			headers={"X-Internal-Api-Key": settings.secret_key},
 			timeout=10
 		)
+
+	@staticmethod
+	async def unregister(tournament_id: int, telegram_id: int) -> httpx.Response:
+		return httpx.post(
+			f"{settings.app.api_url}/tournaments/{tournament_id}/unregister-internal/",
+			json={"telegram_id": telegram_id},
+			headers={"X-Internal-Api-Key": settings.secret_key},
+			timeout=10
+		)

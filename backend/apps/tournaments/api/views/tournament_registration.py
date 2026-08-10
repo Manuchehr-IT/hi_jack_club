@@ -19,15 +19,15 @@ def _perform_registration(pk, user):
 	with transaction.atomic():
 		tournament = Tournament.objects.select_for_update().filter(pk=pk).first()
 		if not tournament:
-			return None, Response({"detail": "Турнир не найден"}, status=404)
+			return None, Response({"detail": "Турнир не найден", "code": "NOT_FOUND"}, status=404)
 
-		can, error = tournament.can_register(user)
+		can, error, code = tournament.can_register(user)
 		if not can:
-			return None, Response({"detail": error}, status=400)
+			return None, Response({"detail": error, "code": code}, status=400)
 
 		status_type = tournament.compute_registration_status()
 		if not status_type:
-			return None, Response({"detail": "Достигнут лимит участников"}, status=400)
+			return None, Response({"detail": "Достигнут лимит участников", "code": "LIMIT_REACHED"}, status=400)
 
 		registration = TournamentRegistration.objects.create(
 			tournament=tournament,
@@ -36,6 +36,73 @@ def _perform_registration(pk, user):
 		)
 
 	return registration, None
+
+def _perform_unregistration(pk, user):
+	"""Общая логика отмены регистрации на турнир. Возвращает (unregistered, error_response)."""
+	with transaction.atomic():
+		tournament = Tournament.objects.select_for_update().filter(pk=pk).first()
+		if not tournament:
+			return False, Response({"detail": "Турнир не найден", "code": "NOT_FOUND"}, status=404)
+
+		if tournament.status != Tournament.StatusType.IN_QUEUE:
+			return False, Response({"detail": "Регистрация закрыта", "code": "REGISTRATION_CLOSED"}, status=400)
+
+		if not TournamentRegistration.objects.filter(tournament=tournament, user=user).exists():
+			return False, Response({"detail": "Вы не зарегистрированы на этот турнир", "code": "NOT_REGISTERED"}, status=400)
+
+		old_waitlist = TournamentRegistration.objects.filter(
+			tournament=tournament,
+			status=TournamentRegistration.StatusType.WAITLIST
+		).order_by("created_at")
+
+		old_position_telegram_ids = {position: registration.user.telegram_id for position, registration in enumerate(old_waitlist[:5], start=1)}
+
+		TournamentRegistration.objects.filter(tournament=tournament, user=user).delete()
+
+		if tournament.get_participants_count() < tournament.max_participants:
+			first_in_line = TournamentRegistration.objects.filter(
+				tournament=tournament,
+				status=TournamentRegistration.StatusType.WAITLIST
+			).order_by("created_at").first()
+
+			if first_in_line:
+				first_in_line.status = TournamentRegistration.StatusType.REGISTERED
+				first_in_line.save()
+
+				send_telegram.delay(
+					telegram_bot_token=settings.TELEGRAM_BOT_TOKEN,
+					method=SendMethod.TEXT,
+					chat_id=first_in_line.user.telegram_id,
+					text=f"♠ Вы в основном составе!"
+				)
+
+		# Должно сработать даже если отменят запись те кто в списке ожидания, а не только те кто уже зарегистрированы
+		updated_waitlist = TournamentRegistration.objects.filter(
+			tournament=tournament,
+			status=TournamentRegistration.StatusType.WAITLIST
+		).order_by("created_at")
+
+		for position, registration in enumerate(updated_waitlist[:5], start=1):
+			if old_position_telegram_ids.get(position) == registration.user.telegram_id:
+				continue
+			messages = {
+				1: "Вы первый в очереди.\nПо сути — уже почти в игре. Будьте на связи.",
+				2: "Вы второй номер в резерве.\nЧуть терпения — и вы за столом.",
+				3: "Вы в тройке лидеров резерва.\nШансы попасть в турнир сегодня — высокие.",
+				4: "Четвёртая позиция в очереди.\nНебольшая дистанция — и вы за столом.",
+				5: "Замыкаете топ-5 ожидания.\nИгра ещё может повернуться в вашу сторону."
+			}
+
+			message = messages.get(position)
+			if message:
+				send_telegram.delay(
+					telegram_bot_token=settings.TELEGRAM_BOT_TOKEN,
+					method=SendMethod.TEXT,
+					chat_id=registration.user.telegram_id,
+					text=message
+				)
+
+	return True, None
 
 @extend_schema(
 	tags=["Tournaments"],
@@ -159,7 +226,7 @@ def register_internal(request, pk):
 
 	user = User.objects.filter(telegram_id=telegram_id).first()
 	if not user:
-		return Response({"detail": "Сначала нужно зарегистрироваться в приложении"}, status=400)
+		return Response({"detail": "Сначала нужно зарегистрироваться в приложении", "code": "USER_NOT_FOUND"}, status=400)
 
 	registration, error_response = _perform_registration(pk, user)
 	if error_response:
@@ -186,66 +253,42 @@ def unregister(request, pk):
 	"""
 	DELETE /api/tournaments/{id}/unregister/
 	"""
-	user = request.user
+	_, error_response = _perform_unregistration(pk, request.user)
+	if error_response:
+		return error_response
 
-	with transaction.atomic():
-		tournament = Tournament.objects.select_for_update().filter(pk=pk).first()
-		if not tournament:
-			return Response({"detail": "Турнир не найден"}, status=404)
+	return Response(status=204)
 
-		if tournament.status != Tournament.StatusType.IN_QUEUE:
-			return Response({"detail": "Регистрация закрыта"}, status=400)
-
-		old_waitlist = TournamentRegistration.objects.filter(
-			tournament=tournament,
-			status=TournamentRegistration.StatusType.WAITLIST
-		).order_by("created_at")
-
-		old_position_telegram_ids = {position: registration.user.telegram_id for position, registration in enumerate(old_waitlist[:5], start=1)}
-
-		deleted_count, _ = TournamentRegistration.objects.filter(tournament=tournament, user=user).delete()
-
-		if tournament.get_participants_count() < tournament.max_participants:
-			first_in_line = TournamentRegistration.objects.filter(
-				tournament=tournament,
-				status=TournamentRegistration.StatusType.WAITLIST
-			).order_by("created_at").first()
-
-			if first_in_line:
-				first_in_line.status = TournamentRegistration.StatusType.REGISTERED
-				first_in_line.save()
-
-				send_telegram.delay(
-					telegram_bot_token=settings.TELEGRAM_BOT_TOKEN,
-					method=SendMethod.TEXT,
-					chat_id=first_in_line.user.telegram_id,
-					text=f"♠ Вы в основном составе!"
-				)
-
-		# Должно сработать даже если отменят запись те кто в списке ожидания, а не только те кто уже зарегистрированы
-		updated_waitlist = TournamentRegistration.objects.filter(
-			tournament=tournament,
-			status=TournamentRegistration.StatusType.WAITLIST
-		).order_by("created_at")
-
-		for position, registration in enumerate(updated_waitlist[:5], start=1):
-			if old_position_telegram_ids.get(position) == registration.user.telegram_id:
-				continue
-			messages = {
-				1: "Вы первый в очереди.\nПо сути — уже почти в игре. Будьте на связи.",
-				2: "Вы второй номер в резерве.\nЧуть терпения — и вы за столом.",
-				3: "Вы в тройке лидеров резерва.\nШансы попасть в турнир сегодня — высокие.",
-				4: "Четвёртая позиция в очереди.\nНебольшая дистанция — и вы за столом.",
-				5: "Замыкаете топ-5 ожидания.\nИгра ещё может повернуться в вашу сторону."
+@extend_schema(
+	tags=["Tournaments"],
+	summary="Отмена регистрации в турнире по telegram_id (для кнопки в рассылке)",
+	description="Только для вызова из Telegram-бота с правильным X-Internal-Api-Key",
+	responses={
+		204: None,
+		400: {
+			"type": "object",
+			"properties": {
+				"detail": {"type": "string"}
 			}
+		}
+	}
+)
+@api_view(["POST"])
+@permission_classes([InternalApiPermission])
+def unregister_internal(request, pk):
+	"""
+	POST /api/tournaments/{id}/unregister-internal/
+	"""
+	telegram_id = request.data.get("telegram_id")
+	if not telegram_id:
+		return Response({"detail": "telegram_id не передан"}, status=400)
 
-			message = messages.get(position)
-			if message:
-				send_telegram.delay(
-					telegram_bot_token=settings.TELEGRAM_BOT_TOKEN,
-					method=SendMethod.TEXT,
-					chat_id=registration.user.telegram_id,
-					text=message
-				)
+	user = User.objects.filter(telegram_id=telegram_id).first()
+	if not user:
+		return Response({"detail": "Сначала нужно зарегистрироваться в приложении", "code": "USER_NOT_FOUND"}, status=400)
+
+	_, error_response = _perform_unregistration(pk, user)
+	if error_response:
+		return error_response
 
 	return Response(status=204)

@@ -47,6 +47,7 @@ def _build_broadcast_payload(data_state: dict):
 @router.callback_query(F.message.chat.type == "private", BaseCallbackData.filter((F.role == "admin") & (F.action == "spamming")), IsAdminFilter())
 async def handle_spamming(call: CallbackQuery, callback_data: BaseCallbackData, state: FSMContext, bot: Bot, user: User):
 	await SafeMessage.message_delete(message=call.message)
+	await state.clear()
 	await state.set_state(StateSpamming.post)
 	await call.message.answer(
 		text=i18n.translate(namespace="responses.spamming", key="message", lang=user.language_code),
@@ -100,6 +101,8 @@ async def handle_attach_tournament(call: CallbackQuery, callback_data: SpammingC
 	if not tournaments:
 		return await call.answer(text=spamming_locale["attach_tournament"]["none_available"], show_alert=True)
 
+	await state.update_data(tournament_options={tournament["id"]: tournament["title"] for tournament in tournaments})
+
 	await call.answer()
 
 	builder = InlineKeyboardBuilder()
@@ -125,13 +128,22 @@ async def handle_attach_tournament(call: CallbackQuery, callback_data: SpammingC
 async def handle_select_tournament(call: CallbackQuery, callback_data: ItemCallbackData, state: FSMContext, bot: Bot, user: User):
 	spamming_locale = i18n.translate(namespace="responses.spamming", lang=user.language_code)
 
+	data_state = await state.get_data()
+	tournament_options = data_state.get("tournament_options", {})
+
 	tournament_id = callback_data.id or None
-	await state.update_data(tournament_id=tournament_id)
+	# FSM-хранилище сериализует данные в JSON, ключи словаря становятся строками
+	tournament_title = tournament_options.get(str(tournament_id)) if tournament_id else None
+
+	await state.update_data(tournament_id=tournament_id, tournament_title=tournament_title)
 
 	alert_text = spamming_locale["attach_tournament"]["attached"] if tournament_id else spamming_locale["attach_tournament"]["detached"]
 	await call.answer(text=alert_text)
 
-	await call.message.edit_text(text=spamming_locale["preview"]["message"], reply_markup=SpammingInlineKeyboard.settings())
+	await call.message.edit_text(
+		text=spamming_locale["preview"]["message"],
+		reply_markup=SpammingInlineKeyboard.settings(tournament_title=tournament_title)
+	)
 
 @router.callback_query(
 	F.message.chat.type == "private",
