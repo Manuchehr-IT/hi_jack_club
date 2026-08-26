@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import api from '@/api/api';
+import { resolveStartParamPath, setPendingRedirect } from '@/utils/deepLink';
 
 export function useTelegramAuth() {
   const [initData, setInitData] = useState(null);
@@ -35,6 +36,11 @@ export function useTelegramAuth() {
     const tg = window.Telegram.WebApp;
     tg.ready();
     tg.expand();
+
+    const redirectPath = resolveStartParamPath(tg.initDataUnsafe?.start_param);
+    if (redirectPath) {
+      setPendingRedirect(redirectPath);
+    }
 
     if (tg.initData) {
       setInitData(tg.initData);

@@ -4,6 +4,7 @@ import { useTelegramBackButton } from '@/hooks/telegram/useTelegramBackButton'
 import { useSignUp } from "@/hooks/useSignUp";
 import { useMe } from "@/hooks/useMe";
 import { PageLoader } from '@/components/Loaders';
+import { consumePendingRedirect } from '@/utils/deepLink';
 import styles from './SignUp.module.css';
 
 const SignUp = () => {
@@ -19,8 +20,9 @@ const SignUp = () => {
 
   useEffect(() => {
     if (!signUpLoading && user?.privacy_policy_accepted) {
-      console.log("Навигация на /home [SignUp]");
-      navigate("/home");
+      const redirectPath = consumePendingRedirect() || "/home";
+      console.log("Навигация после регистрации [SignUp]:", redirectPath);
+      navigate(redirectPath);
     }
   }, [user, signUpLoading, navigate]);
 
@@ -48,7 +50,7 @@ const SignUp = () => {
         privacy_policy_accepted: true,
       });
       console.log("Регистрация успешна:", result);
-      navigate("/home");
+      navigate(consumePendingRedirect() || "/home");
     } catch (error) {
       console.error("Ошибка регистрации:", error);
       throw err;

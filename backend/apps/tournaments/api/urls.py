@@ -1,7 +1,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 
-from .views import tournament_views, tournament_participants, tournament_registration, nearest_tournament, tournament_lifecycle
+from .views import tournament_views, tournament_participants, tournament_registration, nearest_tournament, tournament_lifecycle, partner
 
 router = DefaultRouter()
 router.register(r"", tournament_views.TournamentViewSet, basename="tournament")
@@ -20,6 +20,7 @@ urlpatterns = [
 		path("<int:pk>/availability/", tournament_registration.availability),
 		path("<int:pk>/participants/", tournament_participants.participants),
 		path("list-internal/", tournament_lifecycle.list_internal),
+		path("partner/tournaments/", partner.list_tournaments),
 		path("<int:pk>/start-internal/", tournament_lifecycle.start_internal),
 		path("<int:pk>/finish-internal/", tournament_lifecycle.finish_internal),
 

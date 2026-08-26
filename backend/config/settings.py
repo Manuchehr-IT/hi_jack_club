@@ -35,6 +35,9 @@ STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 # SECURITY WARNING: don't run with debug turned on in production!
 
 SECRET_KEY = os.getenv("SECRET_KEY")
+# Отдельный ключ для внешних партнёрских интеграций — не путать с SECRET_KEY/X-Internal-Api-Key,
+# который используется для подписи JWT и внутренних сервисов (бот, celery).
+PARTNER_API_KEY = os.getenv("PARTNER_API_KEY")
 DEBUG = os.getenv("APP_DEBUG", "False").lower() == "true"
 ALLOWED_HOSTS = env_list("APP_ALLOWED_HOSTS")
 CSRF_TRUSTED_ORIGINS = env_list("APP_CSRF_TRUSTED_ORIGINS")
