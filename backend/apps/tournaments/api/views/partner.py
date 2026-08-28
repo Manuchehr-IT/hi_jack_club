@@ -39,7 +39,8 @@ class PartnerApiPermission(permissions.BasePermission):
 					"title": {"type": "string"},
 					"location": {"type": "string"},
 					"started_at": {"type": "string", "format": "date-time"},
-					"status": {"type": "string"}
+					"status": {"type": "string"},
+					"icon": {"type": "string", "format": "uri", "nullable": True}
 				}
 			}
 		}
@@ -61,6 +62,7 @@ def list_tournaments(request):
 			"location": tournament.location,
 			"started_at": tournament.started_at.isoformat(),
 			"status": tournament.status,
+			"icon": request.build_absolute_uri(tournament.icon.url) if tournament.icon else None,
 		}
 		for tournament in queryset
 	])
