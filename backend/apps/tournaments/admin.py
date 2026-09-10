@@ -76,9 +76,10 @@ def _to_int(val) -> int:
 
 def _parse_excel(file) -> tuple[list[dict], list[str]]:
     """
-    Парсит Excel с экспортом всех пользователей.
+    Парсит Excel с результатами турнира (файл содержит только реальных участников).
     data_only=True — читает кешированные результаты формул, а не сами формулы.
-    Возвращает (rows, errors) — только строки с ИГР Рейт > 0 или ИГР Кил > 0.
+    Возвращает (rows, errors) — все строки с валидными ИГР Рейт/ИГР Кил, включая 0/0:
+    наличие строки в отчёте само по себе означает участие в турнире.
     """
     wb = openpyxl.load_workbook(BytesIO(file.read()), data_only=True)
     ws = wb.active
@@ -123,9 +124,6 @@ def _parse_excel(file) -> tuple[list[dict], list[str]]:
         except (ValueError, TypeError) as e:
             errors.append(f'Строка {row_num}: не удалось прочитать ИГР Рейт/ИГР Кил — {e}')
             continue
-
-        if points == 0 and knockouts == 0:
-            continue  # не участвовал в этом турнире
 
         user_id  = _to_int(row[id_idx]) if id_idx is not None and row[id_idx] is not None else None
         phone    = _normalize_phone(row[phone_idx]) if phone_idx is not None and row[phone_idx] else ''
@@ -323,7 +321,7 @@ class TournamentAdmin(admin.ModelAdmin):
             return render(request, 'admin/tournaments/upload_results.html', context)
 
         if not rows:
-            self.message_user(request, 'Нет участников с ненулевыми результатами', messages.WARNING)
+            self.message_user(request, 'В файле нет строк с результатами', messages.WARNING)
             return render(request, 'admin/tournaments/upload_results.html', context)
 
         # Индекс регистраций по user_id, phone, nickname
