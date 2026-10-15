@@ -3,6 +3,7 @@
 
 from django.contrib.auth import get_user_model
 from django.db import transaction
+from django.utils import timezone
 
 from .models import PartnerRegistration, Tournament, TournamentRegistration
 
@@ -82,7 +83,7 @@ def try_auto_link(partner_reg: PartnerRegistration) -> TournamentRegistration | 
 def build_event_payload(tournament: Tournament) -> dict:
 	return {
 		"external_id": str(tournament.id),
-		"starts_at": tournament.started_at.isoformat(),
+		"starts_at": timezone.localtime(tournament.started_at).isoformat(),
 		"title": tournament.title,
 		"game_type": "tournament",
 		"buy_in": tournament.buy_in,
