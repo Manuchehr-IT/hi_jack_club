@@ -49,6 +49,11 @@ def _handle_registration_created(payload: dict) -> JsonResponse:
 	if not registration_id or not event_external_id or not player.get("nickname"):
 		return JsonResponse({"error": "invalid_payload", "message": "registration_id/event_external_id/player.nickname обязательны"}, status=422)
 
+	# Тестовая бронь — event_external_id может быть фиктивным (например "test-event"),
+	# турнир под него не ищем и ничего не заводим, просто подтверждаем сразу.
+	if payload.get("test"):
+		return JsonResponse({"accepted": True})
+
 	existing = PartnerRegistration.objects.filter(partner_registration_id=registration_id).first()
 	if existing:
 		# Повторная доставка — отдаём тот же ответ, не пересчитываем занятость заново
@@ -59,7 +64,8 @@ def _handle_registration_created(payload: dict) -> JsonResponse:
 	try:
 		tournament = Tournament.objects.get(pk=event_external_id)
 	except (Tournament.DoesNotExist, ValueError):
-		return JsonResponse({"error": "event_not_found", "message": f"Турнир '{event_external_id}' не найден"}, status=404)
+		# 200, а не 404/5xx — иначе уходит в бесконечные ретраи вместо показа отказа игроку
+		return JsonResponse({"accepted": False, "reason": "event_not_found"})
 
 	partner_player_id = player.get("partner_player_id")
 	if not partner_player_id:
@@ -79,7 +85,6 @@ def _handle_registration_created(payload: dict) -> JsonResponse:
 				name=player.get("name"),
 				tg_username=player.get("tg_username"),
 				status=PartnerRegistration.StatusType.REJECTED,
-				is_test=bool(payload.get("test")),
 			)
 			return JsonResponse({"accepted": False, "reason": "full", "waitlist": False})
 
@@ -91,11 +96,9 @@ def _handle_registration_created(payload: dict) -> JsonResponse:
 			name=player.get("name"),
 			tg_username=player.get("tg_username"),
 			status=status,
-			is_test=bool(payload.get("test")),
 		)
 
-	if not partner_reg.is_test:
-		try_auto_link(partner_reg)
+	try_auto_link(partner_reg)
 
 	if status == PartnerRegistration.StatusType.CONFIRMED:
 		return JsonResponse({"accepted": True})
