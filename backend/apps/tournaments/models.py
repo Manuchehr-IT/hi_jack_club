@@ -27,7 +27,7 @@ class Tournament(models.Model):
 	olap_report_completed = models.BooleanField(default=False, verbose_name="OLAP отчет проведен")
 
 	# Партнёрские интеграции (nenadengi и т.п.)
-	buy_in = models.PositiveIntegerField(blank=True, null=True, verbose_name="Бай-ин (₽)", help_text="Пусто — бесплатный турнир")
+	buy_in = models.PositiveIntegerField(default=1000, blank=True, null=True, verbose_name="Бай-ин (₽)", help_text="0 — бесплатный турнир. Пусто оставлять нельзя: партнёры показывают «цена уточняется»")
 	currency = models.CharField(max_length=3, default="RUB", verbose_name="Валюта")
 	registerable = models.BooleanField(default=True, verbose_name="Доступен для записи у партнёров", help_text="Выключите для финалов/инвайтов — турнир виден в афише, но без кнопки записи")
 

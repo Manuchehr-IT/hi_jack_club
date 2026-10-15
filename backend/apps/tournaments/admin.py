@@ -117,9 +117,14 @@ def _parse_excel(file) -> tuple[list[dict], list[str]]:
         return [], errors
 
     rows = []
+    place_counter = 0
     for row_num, row in enumerate(ws.iter_rows(min_row=header_row_num + 1, values_only=True), start=header_row_num + 1):
         if not any(v is not None for v in row):
             continue
+
+        # Счётчик строки — независимо от дальнейших ошибок парсинга, чтобы места
+        # у всех остальных участников не съезжали, если одна строка не читается
+        place_counter += 1
 
         try:
             points    = _to_int(row[points_idx])
@@ -131,7 +136,12 @@ def _parse_excel(file) -> tuple[list[dict], list[str]]:
         user_id  = _to_int(row[id_idx]) if id_idx is not None and row[id_idx] is not None else None
         phone    = _normalize_phone(row[phone_idx]) if phone_idx is not None and row[phone_idx] else ''
         nickname = str(row[nickname_idx]).strip().lower() if nickname_idx is not None and row[nickname_idx] else ''
-        place    = _to_int(row[place_idx]) if place_idx is not None and row[place_idx] is not None else None
+        # Явная колонка места — если вдруг появится в файле; иначе берём порядок
+        # строк в отчёте (админ выгружает уже отсортированным: 1-я строка — победитель)
+        if place_idx is not None and row[place_idx] is not None:
+            place = _to_int(row[place_idx])
+        else:
+            place = place_counter
         payout   = _to_int(row[payout_idx]) if payout_idx is not None and row[payout_idx] is not None else None
 
         rows.append({
@@ -168,6 +178,9 @@ class TournamentAdmin(admin.ModelAdmin):
                 ('Основная информация', {
                     'fields': ('title', 'location', 'started_at', 'general_rules', 'max_participants', 'max_waitlist', 'icon')
                 }),
+                ('Партнёрская афиша (nenadengi и т.п.)', {
+                    'fields': ('buy_in', 'currency', 'registerable')
+                }),
                 ('Статус', {
                     'fields': ('status_display',)
                 }),
@@ -181,6 +194,9 @@ class TournamentAdmin(admin.ModelAdmin):
         return (
             ('Основная информация', {
                 'fields': ('title', 'location', 'started_at', 'general_rules', 'max_participants', 'max_waitlist', 'icon')
+            }),
+            ('Партнёрская афиша (nenadengi и т.п.)', {
+                'fields': ('buy_in', 'currency', 'registerable')
             }),
         )
 
