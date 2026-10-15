@@ -26,6 +26,11 @@ class Tournament(models.Model):
 
 	olap_report_completed = models.BooleanField(default=False, verbose_name="OLAP отчет проведен")
 
+	# Партнёрские интеграции (nenadengi и т.п.)
+	buy_in = models.PositiveIntegerField(blank=True, null=True, verbose_name="Бай-ин (₽)", help_text="Пусто — бесплатный турнир")
+	currency = models.CharField(max_length=3, default="RUB", verbose_name="Валюта")
+	registerable = models.BooleanField(default=True, verbose_name="Доступен для записи у партнёров", help_text="Выключите для финалов/инвайтов — турнир виден в афише, но без кнопки записи")
+
 	created_at = models.DateTimeField(auto_now_add=True, verbose_name="Создан")
 	updated_at = models.DateTimeField(auto_now=True, verbose_name="Обновлен")
 
@@ -148,6 +153,10 @@ class TournamentRegistration(models.Model):
 		REGISTERED = "REGISTERED", "Зарегистрирован"
 		WAITLIST = "WAITLIST", "В листе ожидания"
 
+	class SourceType(models.TextChoices):
+		NENADENGI = "nenadengi", "nenadengi"
+		# в будущем, если появится ещё один партнёр, у которого есть бронирование — новый пункт сюда
+
 	tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE, related_name="registrations", verbose_name="Турнир")
 	user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="tournament_registrations", verbose_name="Пользователь")
 	status = models.CharField(max_length=20, choices=StatusType.choices, default=StatusType.REGISTERED, verbose_name="Статус регистрации")
@@ -156,12 +165,17 @@ class TournamentRegistration(models.Model):
 	knockouts = models.IntegerField(default=0, verbose_name="Нокауты")
 	points = models.IntegerField(default=0, verbose_name="Очки рейтинга")
 	attended = models.BooleanField(default=False, verbose_name="Пользователь присутствовал")
+	place = models.PositiveIntegerField(blank=True, null=True, verbose_name="Место")
+	payout = models.PositiveIntegerField(blank=True, null=True, verbose_name="Приз (₽)")
 
 	created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата регистрации")
 	updated_at = models.DateTimeField(auto_now=True, verbose_name="Дата обновления")
 
 	# Дополнительные поля если нужно
 	table_number = models.CharField(max_length=12, blank=True, null=True, verbose_name="Номер стола")
+
+	# Откуда пришла регистрация: None — своя (бот/апп), иначе код партнёра
+	source = models.CharField(max_length=32, choices=SourceType.choices, blank=True, null=True, default=None, verbose_name="Источник")
 
 	class Meta:
 		verbose_name = "Регистрация на турнир"
@@ -185,3 +199,53 @@ class TournamentRegistration(models.Model):
 
 	def __str__(self):
 		return f"{self.user} - {self.tournament}"
+
+
+class PartnerRegistration(models.Model):
+	"""Бронь турнира, пришедшая от партнёра (nenadengi). До связывания с нашим
+	User хранит снэпшот гостя и его результат сама; после связывания вся
+	дальнейшая судьба очков/нокаутов идёт через обычную TournamentRegistration."""
+
+	class StatusType(models.TextChoices):
+		CONFIRMED = "confirmed", "Подтверждена"
+		WAITLISTED = "waitlisted", "Лист ожидания"
+		REJECTED = "rejected", "Отклонена"
+		CANCELLED = "cancelled", "Отменена гостем"
+
+	tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE, related_name="partner_registrations", verbose_name="Турнир")
+
+	# Идентификация гостя на стороне nenadengi
+	partner_player_id = models.UUIDField(db_index=True, verbose_name="ID гостя у партнёра")
+	partner_registration_id = models.CharField(max_length=64, unique=True, verbose_name="ID брони у партнёра")
+
+	# Снэпшот гостя на момент этой конкретной брони
+	nickname = models.CharField(max_length=64, verbose_name="Никнейм у партнёра")
+	name = models.CharField(max_length=64, blank=True, null=True, verbose_name="Имя")
+	tg_username = models.CharField(max_length=32, blank=True, null=True, verbose_name="Telegram username")
+
+	# Связь с нашей системой — пусто, пока админ (или авто-линковка по nenadengi_id) не свяжет
+	user = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True, related_name="partner_registrations", verbose_name="Пользователь")
+	tournament_registration = models.OneToOneField(
+		TournamentRegistration, on_delete=models.SET_NULL, blank=True, null=True,
+		related_name="partner_registration", verbose_name="Регистрация"
+	)
+
+	status = models.CharField(max_length=20, choices=StatusType.choices, verbose_name="Статус брони")
+	seat = models.CharField(max_length=12, blank=True, null=True, verbose_name="Место")
+	is_test = models.BooleanField(default=False, verbose_name="Тестовая бронь")
+
+	# Результат — актуален только пока tournament_registration не проставлена
+	attended = models.BooleanField(default=False, verbose_name="Присутствовал")
+	place = models.PositiveIntegerField(blank=True, null=True, verbose_name="Место в турнире")
+	payout = models.PositiveIntegerField(blank=True, null=True, verbose_name="Приз (₽)")
+
+	created_at = models.DateTimeField(auto_now_add=True, verbose_name="Создана")
+	updated_at = models.DateTimeField(auto_now=True, verbose_name="Обновлена")
+
+	class Meta:
+		verbose_name = "Партнёрская бронь"
+		verbose_name_plural = "Партнёрские брони"
+		ordering = ["-created_at"]
+
+	def __str__(self):
+		return f"{self.nickname} ({self.partner_player_id}) - {self.tournament}"

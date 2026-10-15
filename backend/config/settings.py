@@ -38,6 +38,12 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 # Отдельный ключ для внешних партнёрских интеграций — не путать с SECRET_KEY/X-Internal-Api-Key,
 # который используется для подписи JWT и внутренних сервисов (бот, celery).
 PARTNER_API_KEY = os.getenv("PARTNER_API_KEY")
+
+# Интеграция с nenadengi (отдельный партнёр, не путать с PARTNER_API_KEY выше)
+NENADENGI_API_KEY = os.getenv("NENADENGI_API_KEY")
+NENADENGI_SECRET = os.getenv("NENADENGI_SECRET")
+NENADENGI_WEBHOOK_SECRET = os.getenv("NENADENGI_WEBHOOK_SECRET")
+NENADENGI_BASE_URL = os.getenv("NENADENGI_BASE_URL", "")
 DEBUG = os.getenv("APP_DEBUG", "False").lower() == "true"
 ALLOWED_HOSTS = env_list("APP_ALLOWED_HOSTS")
 CSRF_TRUSTED_ORIGINS = env_list("APP_CSRF_TRUSTED_ORIGINS")

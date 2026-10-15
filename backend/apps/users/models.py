@@ -68,6 +68,9 @@ class User(AbstractBaseUser, PermissionsMixin):
 	iiko_id = models.UUIDField(unique=True, blank=True, null=True, verbose_name="Iiko ID")
 	iiko_qr_code = models.ImageField(upload_to="iiko_qr_codes/", null=True, blank=True, verbose_name="Статические QR")
 
+	# nenadengi:
+	nenadengi_id = models.UUIDField(unique=True, blank=True, null=True, verbose_name="Nenadengi ID")
+
 	# Соглашения
 	privacy_policy_accepted = models.BooleanField(default=False, verbose_name="Согласие на политику конфиденциальности")
 

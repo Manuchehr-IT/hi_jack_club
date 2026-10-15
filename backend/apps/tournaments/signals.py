@@ -43,6 +43,13 @@ def recalculate_on_registration_delete(sender, instance: TournamentRegistration,
 
 
 @receiver(post_save, sender=Tournament)
+def sync_tournament_to_nenadengi(sender, instance: Tournament, **kwargs):
+    from celery_app.tasks.nenadengi import sync_event_task
+
+    sync_event_task.delay(instance.id)
+
+
+@receiver(post_save, sender=Tournament)
 def schedule_tournament_lifecycle(sender, instance: Tournament, created, **kwargs):
     from celery_app.tasks.tournament import tournament_lifecycle_task
 
